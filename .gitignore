@@ -29,8 +29,9 @@ evaluation/scoreboard.csv
 # -- gated data --------------------------------------------------------------------------------
 # data/ is committed empty, with only its README, so the folder participants are told to unpack
 # into actually exists in a fresh clone. Everything they put in it stays out of git.
-data/*
+/data/*
 !data/README.md
+/alternative_data/
 
 *.mp4
 *.gzip
