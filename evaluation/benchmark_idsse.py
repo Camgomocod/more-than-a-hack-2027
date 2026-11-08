@@ -1,6 +1,7 @@
 """Benchmark HMM/Viterbi Model on IDSSE Bundesliga Open Tracking & Event Data.
 Matches: Sportec Solutions TRACAB optical tracking (25 fps) with official DFL events.
 Evaluates out-of-domain generalization on 1. FC Köln vs FC Bayern München (Matchday 34).
+Includes Phase 5.1 Kinematic Boundary Refinement comparison.
 """
 
 import xml.etree.ElementTree as ET
@@ -12,8 +13,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(ROOT, "models"))
 
 import possession_metrics as pm
+from boundary_refinement import refine_transition_boundaries
 
 HOME_ID = "DFL-CLU-000008"  # 1. FC Köln
 AWAY_ID = "DFL-CLU-00000G"  # FC Bayern München
@@ -48,9 +51,10 @@ def evaluate_match_half(target_sec="firstHalf", min_spell=50):
                         n = int(fr.get("N"))
                         x = float(fr.get("X"))
                         y = float(fr.get("Y"))
+                        s = float(fr.get("S")) if "S" in fr.attrib else 0.0
                         status = fr.get("BallStatus")
                         poss = fr.get("BallPossession")
-                        ball_frames[n] = (x, y, status, poss)
+                        ball_frames[n] = (x, y, s, status, poss)
                 elif team == HOME_ID:
                     home_player_frames[pid] = {
                         int(fr.get("N")): (float(fr.get("X")), float(fr.get("Y"))) for fr in elem
@@ -67,7 +71,7 @@ def evaluate_match_half(target_sec="firstHalf", min_spell=50):
     # 1. Build Ground Truth from TRACAB
     gt_labels = []
     for fn in frame_numbers:
-        bx, by, status, poss = ball_frames[fn]
+        bx, by, bs, status, poss = ball_frames[fn]
         if status == "0":
             gt_labels.append("D")
         elif poss == "1":
@@ -83,12 +87,14 @@ def evaluate_match_half(target_sec="firstHalf", min_spell=50):
     d_a = np.full(N, 50.0, dtype=np.float32)
     k5_ratio = np.full(N, 0.5, dtype=np.float32)
     ball_out = np.zeros(N, dtype=np.int8)
+    ball_speed = np.zeros(N, dtype=np.float32)
 
     h_pids = list(home_player_frames.keys())
     a_pids = list(away_player_frames.keys())
 
     for idx, fn in enumerate(frame_numbers):
-        bx, by, _, _ = ball_frames[fn]
+        bx, by, bs, _, _ = ball_frames[fn]
+        ball_speed[idx] = bs
         if abs(bx) > 52.5 or abs(by) > 34.0:
             ball_out[idx] = 1
 
@@ -184,51 +190,60 @@ def evaluate_match_half(target_sec="firstHalf", min_spell=50):
                 else:
                     labels[s:e] = next_lbl
 
-    pred_labels = np.array([["H", "A", "D"][x] for x in labels])
+    # 7. Apply Phase 5.1 Boundary Refinement
+    labels_refined = refine_transition_boundaries(
+        labels,
+        d_h=d_h,
+        d_a=d_a,
+        ball_out=ball_out,
+        ball_speed=ball_speed
+    )
 
-    # 7. Evaluate
     gt_codes = np.array([{"H": 0, "A": 1, "D": 2, "X": 3}[x] for x in gt_labels], dtype=np.int8)
-    pred_codes = np.array([{"H": 0, "A": 1, "D": 2, "X": 3}[x] for x in pred_labels], dtype=np.int8)
-
-    res = pm.evaluate(gt_codes, pred_codes, taus=(12, 25), bootstrap_n=0)
+    res_base = pm.evaluate(gt_codes, labels, taus=(12, 25), bootstrap_n=0)
+    res_ref = pm.evaluate(gt_codes, labels_refined, taus=(12, 25), bootstrap_n=0)
     elapsed = time.time() - t0
 
     print(f"Completed in {elapsed:.2f}s for {N:,} frames ({N/25.0/60.0:.1f} min).")
-    print(f"  macroF1:        {res['macro_f1']:.4f}")
-    print(f"  spellF1:        {res['spell_f1_mean']:.4f}")
-    print(f"  Accuracy:       {res['accuracy']:.4f}")
-    print(f"  Cohen Kappa:    {res['kappa']:.4f}")
-    print(f"  Alive/Dead F1:  {res['alive_dead_f1']:.4f}")
-    print(f"  F1 H (Köln):    {res['per_class']['H']['f1']:.4f}")
-    print(f"  F1 A (Bayern):  {res['per_class']['A']['f1']:.4f}")
-    print(f"  F1 D:           {res['per_class']['D']['f1']:.4f}")
-    print(f"  Share Error:    {res['share_err']:.4f} (GT: {res['gt_home_share']:.4f}, Pred: {res['pred_home_share']:.4f})")
-    print(f"  Possessions:    GT {res['n_gt_spells']} vs Pred {res['n_pred_spells']}")
-    return res
+    print(f"  Macro F1:        Base={res_base['macro_f1']:.4f}  -->  Refined={res_ref['macro_f1']:.4f}")
+    print(f"  Spell F1:        Base={res_base['spell_f1_mean']:.4f}  -->  Refined={res_ref['spell_f1_mean']:.4f}")
+    print(f"  Accuracy:        Base={res_base['accuracy']*100:.2f}%  -->  Refined={res_ref['accuracy']*100:.2f}%")
+    print(f"  Trans F1 (tau25):Base={res_base['transitions'][25]['f1']:.4f}  -->  Refined={res_ref['transitions'][25]['f1']:.4f}")
+    print(f"  Mean Latency:    Base={res_base['transitions'][25]['mean_latency']:.2f}f  -->  Refined={res_ref['transitions'][25]['mean_latency']:.2f}f")
+    print(f"  Share Error:     Base={res_base['share_err']:.4f}  -->  Refined={res_ref['share_err']:.4f}")
+    return res_base, res_ref
 
 
 def run_benchmark():
-    r1 = evaluate_match_half("firstHalf")
-    r2 = evaluate_match_half("secondHalf")
+    r1_b, r1_r = evaluate_match_half("firstHalf")
+    r2_b, r2_r = evaluate_match_half("secondHalf")
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print("CONSOLIDATED FULL-MATCH BENCHMARK (145,967 FRAMES / 97.3 MIN)")
-    print("=" * 60)
-    avg_macro = (r1["macro_f1"] + r2["macro_f1"]) / 2.0
-    avg_spell = (r1["spell_f1_mean"] + r2["spell_f1_mean"]) / 2.0
-    avg_acc = (r1["accuracy"] + r2["accuracy"]) / 2.0
-    avg_kappa = (r1["kappa"] + r2["kappa"]) / 2.0
-    avg_ad = (r1["alive_dead_f1"] + r2["alive_dead_f1"]) / 2.0
-    avg_fd = (r1["per_class"]["D"]["f1"] + r2["per_class"]["D"]["f1"]) / 2.0
-    avg_share_err = (r1["share_err"] + r2["share_err"]) / 2.0
+    print("=" * 70)
 
-    print(f"Macro F1 (Full Match Mean):     {avg_macro:.4f}")
-    print(f"Spell F1 (Full Match Mean):     {avg_spell:.4f}")
-    print(f"Accuracy (Full Match Mean):     {avg_acc:.4f}")
-    print(f"Cohen Kappa (Full Match Mean):  {avg_kappa:.4f}")
-    print(f"Alive/Dead F1:                  {avg_ad:.4f}")
-    print(f"Dead Ball (D) F1:               {avg_fd:.4f}")
-    print(f"Possession Share Error:         {avg_share_err:.4f} (~{avg_share_err*100:.2f}%)")
+    avg_macro_b = (r1_b["macro_f1"] + r2_b["macro_f1"]) / 2.0
+    avg_macro_r = (r1_r["macro_f1"] + r2_r["macro_f1"]) / 2.0
+
+    avg_spell_b = (r1_b["spell_f1_mean"] + r2_b["spell_f1_mean"]) / 2.0
+    avg_spell_r = (r1_r["spell_f1_mean"] + r2_r["spell_f1_mean"]) / 2.0
+
+    avg_acc_b = (r1_b["accuracy"] + r2_b["accuracy"]) / 2.0
+    avg_acc_r = (r1_r["accuracy"] + r2_r["accuracy"]) / 2.0
+
+    avg_tf_b = (r1_b["transitions"][25]["f1"] + r2_b["transitions"][25]["f1"]) / 2.0
+    avg_tf_r = (r1_r["transitions"][25]["f1"] + r2_r["transitions"][25]["f1"]) / 2.0
+
+    avg_lat_b = (r1_b["transitions"][25]["mean_latency"] + r2_b["transitions"][25]["mean_latency"]) / 2.0
+    avg_lat_r = (r1_r["transitions"][25]["mean_latency"] + r2_r["transitions"][25]["mean_latency"]) / 2.0
+
+    print(f"{'Métrica':<25} {'Base (HMM Viterbi)':<22} {'Refinado (Paso 5.1)':<22} {'Diferencia':<10}")
+    print("-" * 75)
+    print(f"{'Spell F1 (Métrica Reina)':<25} {avg_spell_b:<22.4f} {avg_spell_r:<22.4f} {avg_spell_r - avg_spell_b:+.4f}")
+    print(f"{'Macro F1':<25} {avg_macro_b:<22.4f} {avg_macro_r:<22.4f} {avg_macro_r - avg_macro_b:+.4f}")
+    print(f"{'Accuracy (Exactitud)':<25} {avg_acc_b*100:<21.2f}% {avg_acc_r*100:<21.2f}% {(avg_acc_r - avg_acc_b)*100:+.2f}%")
+    print(f"{'Transitions F1 (tau=25)':<25} {avg_tf_b:<22.4f} {avg_tf_r:<22.4f} {avg_tf_r - avg_tf_b:+.4f}")
+    print(f"{'Latencia Media':<25} {avg_lat_b:<21.2f}f {avg_lat_r:<21.2f}f {avg_lat_r - avg_lat_b:+.2f}f")
 
 
 if __name__ == "__main__":

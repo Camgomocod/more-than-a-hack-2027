@@ -1,6 +1,6 @@
 # Registro Histórico de Desempeño y Benchmark de Modelos
 
-**Última actualización:** 2026-11-08 12:58:55  
+**Última actualización:** 2026-11-08 13:26:55  
 **Reto:** More than a Hack 2027 — Phase 1: Ball Possession (Metrica Sports / FC Barcelona / MWCapital)  
 **Archivo de datos estructurados:** [`evaluation/performance_log.json`](file:///home/crwy/Projects/Barcelona/more-than-a-hack-2027/evaluation/performance_log.json)  
 
@@ -10,12 +10,13 @@
 
 | Rank | Submission | Fase / Enfoque | `spellF1` (Rank) | `macroF1` | Exactitud | $\kappa$ | Posesiones (GT=17) | Duración (GT=14.2s) | F1 D (Paradas) | `shareE` | `transF1` ($\tau=25$) |
 |:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1** | **`model_viterbi`** | Fase 4 (Modelo Final) | **0.5371** | **0.7938** | 81.3% | 0.6985 | 18 | 14.2s | 0.7244 | 0.003 | 0.2857 |
-| 2 | `baseline_smooth125` | Baseline Oficial | 0.4242 | 0.5812 | 72.7% | 0.5355 | 16 | 18.5s | 0.1464 | 0.052 | 0.1667 |
-| 3 | `baseline_v2` | Fase 2 (Heurístico Contextual) | 0.4235 | 0.7169 | 76.6% | 0.6157 | 17 | 15.8s | 0.5474 | 0.020 | 0.2326 |
-| 4 | `baseline_smooth50` | Baseline Oficial | 0.3256 | 0.6207 | 71.3% | 0.5202 | 26 | 10.8s | 0.3225 | 0.048 | 0.0816 |
-| 5 | `baseline_smooth25` | Baseline Oficial | 0.2868 | 0.6200 | 69.1% | 0.4878 | 36 | 7.6s | 0.3857 | 0.056 | 0.2034 |
-| 6 | `baseline_raw` | Baseline Oficial | 0.0378 | 0.5972 | 65.1% | 0.4282 | 131 | 2.0s | 0.4197 | 0.046 | 0.1410 |
+| **1** | **`model_viterbi_refined`** | Fase 5.1 (Modelo Refinado) | **0.5371** | **0.8003** | 81.8% | 0.7067 | 18 | 14.1s | 0.7368 | 0.002 | 0.2857 |
+| 2 | `model_viterbi` | Fase 4 (HMM Viterbi Base) | 0.5371 | 0.7938 | 81.3% | 0.6985 | 18 | 14.2s | 0.7244 | 0.003 | 0.2857 |
+| 3 | `baseline_smooth125` | Baseline Oficial | 0.4242 | 0.5812 | 72.7% | 0.5355 | 16 | 18.5s | 0.1464 | 0.052 | 0.1667 |
+| 4 | `baseline_v2` | Fase 2 (Heurístico Contextual) | 0.4235 | 0.7169 | 76.6% | 0.6157 | 17 | 15.8s | 0.5474 | 0.020 | 0.2326 |
+| 5 | `baseline_smooth50` | Baseline Oficial | 0.3256 | 0.6207 | 71.3% | 0.5202 | 26 | 10.8s | 0.3225 | 0.048 | 0.0816 |
+| 6 | `baseline_smooth25` | Baseline Oficial | 0.2868 | 0.6200 | 69.1% | 0.4878 | 36 | 7.6s | 0.3857 | 0.056 | 0.2034 |
+| 7 | `baseline_raw` | Baseline Oficial | 0.0378 | 0.5972 | 65.1% | 0.4282 | 131 | 2.0s | 0.4197 | 0.046 | 0.1410 |
 
 ---
 
@@ -36,6 +37,7 @@ Evaluación en el dataset público **IDSSE** (*Nature Scientific Data*, 2025) co
 
 | Partido Evaluado | Frames | Duración | `macroF1` | Exactitud | $\kappa$ | F1 Balón Parado ($D$) | Error Reparto Posesión |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1. FC Köln vs. FC Bayern München (DFL-MAT-J03WMX)** | 145,967 | 97.3 min | **0.8317** | **84.2%** | **0.7554** | **0.8899** | **1.10%** |
 | **1. FC Köln vs. FC Bayern München (DFL-MAT-J03WMX)** | 145,967 | 97.3 min | **0.8319** | **84.3%** | **0.7570** | **0.8970** | **1.10%** |
 
 ### Conclusiones del Benchmark Externo

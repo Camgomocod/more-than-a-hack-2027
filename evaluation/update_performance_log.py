@@ -15,10 +15,15 @@ PERF_JSON = os.path.join(HERE, "performance_log.json")
 PERF_MD = os.path.join(ROOT, "docs", "performance_log.md")
 
 DESCRIPTIONS = {
-    "model_viterbi": {
-        "phase": "Fase 4 (Modelo Final)",
-        "summary": "HMM Jerárquico con Decodificación Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisión (0.80).",
+    "model_viterbi_refined": {
+        "phase": "Fase 5.1 (Modelo Refinado)",
+        "summary": "HMM Jerárquico + Viterbi Global + Módulo de Refinamiento Cinemático de Fronteras (latencia cero, física pura).",
         "rank_official": 1,
+    },
+    "model_viterbi": {
+        "phase": "Fase 4 (HMM Viterbi Base)",
+        "summary": "HMM Jerárquico con Decodificación Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisión (0.80).",
+        "rank_official": 2,
     },
     "baseline_smooth125": {
         "phase": "Baseline Oficial",
@@ -49,6 +54,27 @@ DESCRIPTIONS = {
 
 EXTERNAL_BENCHMARKS = [
     {
+        "model": "model_viterbi_refined",
+        "dataset": "IDSSE (Bundesliga)",
+        "match": "1. FC Köln vs. FC Bayern München (DFL-MAT-J03WMX)",
+        "provider": "Sportec Solutions TRACAB (25 fps)",
+        "date": "2026-11-08",
+        "total_frames": 145967,
+        "duration_minutes": 97.3,
+        "macro_f1": 0.8317,
+        "spell_f1_mean": 0.4055,
+        "accuracy": 0.8419,
+        "kappa": 0.7554,
+        "alive_dead_f1": 0.9304,
+        "f1_H": 0.7890,
+        "f1_A": 0.8062,
+        "f1_D": 0.8899,
+        "share_err": 0.0110,
+        "gt_share_H": 0.4637,
+        "pred_share_H": 0.4527,
+        "notes": "Paso 5.1 con refinamiento cinemático. Spell F1 sube de 0.3980 a 0.4055 sobre 145.967 frames."
+    },
+    {
         "model": "model_viterbi",
         "dataset": "IDSSE (Bundesliga)",
         "match": "1. FC Köln vs. FC Bayern München (DFL-MAT-J03WMX)",
@@ -67,7 +93,7 @@ EXTERNAL_BENCHMARKS = [
         "share_err": 0.0110,
         "gt_share_H": 0.4637,
         "pred_share_H": 0.4527,
-        "notes": "Test de estrés fuera de dominio en partido completo de 97.3 min. F1 en balón parado alcanza 0.897 sin reentrenamiento."
+        "notes": "HMM Viterbi base de Fase 4 antes de refinamiento."
     }
 ]
 

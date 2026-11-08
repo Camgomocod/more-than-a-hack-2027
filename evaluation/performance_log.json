@@ -1,12 +1,44 @@
 {
-  "updated_at": "2026-11-08T12:58:55.301438",
+  "updated_at": "2026-11-08T13:26:55.426179",
   "competition": "More than a Hack 2027 \u2014 Phase 1: Ball Possession",
   "ground_truth_public_frames": 7500,
   "official_leaderboard": [
     {
       "rank": 1,
+      "submission": "model_viterbi_refined",
+      "phase": "Fase 5.1 (Modelo Refinado)",
+      "summary": "HMM Jer\u00e1rquico + Viterbi Global + M\u00f3dulo de Refinamiento Cinem\u00e1tico de Fronteras (latencia cero, f\u00edsica pura).",
+      "macro_f1": 0.800268,
+      "spell_f1_mean": 0.537143,
+      "n_pred_spells": 18,
+      "n_gt_spells": 17,
+      "mean_spell_duration_s": 14.14,
+      "gt_mean_spell_duration_s": 14.190588,
+      "accuracy": 0.8176,
+      "kappa": 0.706656,
+      "alive_dead_f1": 0.944651,
+      "f1_H": 0.849508,
+      "f1_A": 0.814534,
+      "f1_D": 0.736761,
+      "precision_H": 0.826039,
+      "recall_H": 0.874349,
+      "precision_A": 0.794976,
+      "recall_A": 0.83508,
+      "precision_D": 0.844327,
+      "recall_D": 0.653506,
+      "share_err": 0.001864,
+      "gt_home_share": 0.572708,
+      "pred_home_share": 0.574572,
+      "mean_latency_frames": 0.0,
+      "trans_f1_25": 0.285714,
+      "trans_precision_25": 0.272727,
+      "trans_recall_25": 0.3,
+      "fragmentation": 1.095238
+    },
+    {
+      "rank": 2,
       "submission": "model_viterbi",
-      "phase": "Fase 4 (Modelo Final)",
+      "phase": "Fase 4 (HMM Viterbi Base)",
       "summary": "HMM Jer\u00e1rquico con Decodificaci\u00f3n Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisi\u00f3n (0.80).",
       "macro_f1": 0.793844,
       "spell_f1_mean": 0.537143,
@@ -36,7 +68,7 @@
       "fragmentation": 1.095238
     },
     {
-      "rank": 2,
+      "rank": 3,
       "submission": "baseline_smooth125",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 125 frames (5.0 s). Alta inercia, bajo recall en D (7.9%).",
@@ -68,7 +100,7 @@
       "fragmentation": 0.809524
     },
     {
-      "rank": 3,
+      "rank": 4,
       "submission": "baseline_v2",
       "phase": "Fase 2 (Heur\u00edstico Contextual)",
       "summary": "Hist\u00e9resis espacial (radio 2.5m, 8 frames), burbuja 5-NN (+4.3m) y fusi\u00f3n con Smart Tagging (Set Pieces).",
@@ -100,7 +132,7 @@
       "fragmentation": 1.142857
     },
     {
-      "rank": 4,
+      "rank": 5,
       "submission": "baseline_smooth50",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 50 frames (2.0 s).",
@@ -132,7 +164,7 @@
       "fragmentation": 1.428571
     },
     {
-      "rank": 5,
+      "rank": 6,
       "submission": "baseline_smooth25",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 25 frames (1.0 s).",
@@ -164,7 +196,7 @@
       "fragmentation": 1.904762
     },
     {
-      "rank": 6,
+      "rank": 7,
       "submission": "baseline_raw",
       "phase": "Baseline Oficial",
       "summary": "Asignaci\u00f3n frame a frame al jugador m\u00e1s cercano sin memoria temporal (131 micro-posesiones de 2.0s).",
@@ -198,6 +230,27 @@
   ],
   "external_benchmarks": [
     {
+      "model": "model_viterbi_refined",
+      "dataset": "IDSSE (Bundesliga)",
+      "match": "1. FC K\u00f6ln vs. FC Bayern M\u00fcnchen (DFL-MAT-J03WMX)",
+      "provider": "Sportec Solutions TRACAB (25 fps)",
+      "date": "2026-11-08",
+      "total_frames": 145967,
+      "duration_minutes": 97.3,
+      "macro_f1": 0.8317,
+      "spell_f1_mean": 0.4055,
+      "accuracy": 0.8419,
+      "kappa": 0.7554,
+      "alive_dead_f1": 0.9304,
+      "f1_H": 0.789,
+      "f1_A": 0.8062,
+      "f1_D": 0.8899,
+      "share_err": 0.011,
+      "gt_share_H": 0.4637,
+      "pred_share_H": 0.4527,
+      "notes": "Paso 5.1 con refinamiento cinem\u00e1tico. Spell F1 sube de 0.3980 a 0.4055 sobre 145.967 frames."
+    },
+    {
       "model": "model_viterbi",
       "dataset": "IDSSE (Bundesliga)",
       "match": "1. FC K\u00f6ln vs. FC Bayern M\u00fcnchen (DFL-MAT-J03WMX)",
@@ -216,7 +269,7 @@
       "share_err": 0.011,
       "gt_share_H": 0.4637,
       "pred_share_H": 0.4527,
-      "notes": "Test de estr\u00e9s fuera de dominio en partido completo de 97.3 min. F1 en bal\u00f3n parado alcanza 0.897 sin reentrenamiento."
+      "notes": "HMM Viterbi base de Fase 4 antes de refinamiento."
     }
   ]
 }
