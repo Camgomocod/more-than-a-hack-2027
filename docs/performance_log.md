@@ -1,6 +1,6 @@
 # Registro Histórico de Desempeño y Benchmark de Modelos
 
-**Última actualización:** 2026-11-08 13:26:55  
+**Última actualización:** 2026-11-08 13:51:25  
 **Reto:** More than a Hack 2027 — Phase 1: Ball Possession (Metrica Sports / FC Barcelona / MWCapital)  
 **Archivo de datos estructurados:** [`evaluation/performance_log.json`](file:///home/crwy/Projects/Barcelona/more-than-a-hack-2027/evaluation/performance_log.json)  
 
@@ -12,11 +12,12 @@
 |:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1** | **`model_viterbi_refined`** | Fase 5.1 (Modelo Refinado) | **0.5371** | **0.8003** | 81.8% | 0.7067 | 18 | 14.1s | 0.7368 | 0.002 | 0.2857 |
 | 2 | `model_viterbi` | Fase 4 (HMM Viterbi Base) | 0.5371 | 0.7938 | 81.3% | 0.6985 | 18 | 14.2s | 0.7244 | 0.003 | 0.2857 |
-| 3 | `baseline_smooth125` | Baseline Oficial | 0.4242 | 0.5812 | 72.7% | 0.5355 | 16 | 18.5s | 0.1464 | 0.052 | 0.1667 |
-| 4 | `baseline_v2` | Fase 2 (Heurístico Contextual) | 0.4235 | 0.7169 | 76.6% | 0.6157 | 17 | 15.8s | 0.5474 | 0.020 | 0.2326 |
-| 5 | `baseline_smooth50` | Baseline Oficial | 0.3256 | 0.6207 | 71.3% | 0.5202 | 26 | 10.8s | 0.3225 | 0.048 | 0.0816 |
-| 6 | `baseline_smooth25` | Baseline Oficial | 0.2868 | 0.6200 | 69.1% | 0.4878 | 36 | 7.6s | 0.3857 | 0.056 | 0.2034 |
-| 7 | `baseline_raw` | Baseline Oficial | 0.0378 | 0.5972 | 65.1% | 0.4282 | 131 | 2.0s | 0.4197 | 0.046 | 0.1410 |
+| 3 | `model_bundesliga_trained` | Fase 5.2 (Entrenado en Bundesliga) | 0.5000 | 0.7959 | 81.9% | 0.7071 | 19 | 13.7s | 0.7069 | 0.011 | 0.3256 |
+| 4 | `baseline_smooth125` | Baseline Oficial | 0.4242 | 0.5812 | 72.7% | 0.5355 | 16 | 18.5s | 0.1464 | 0.052 | 0.1667 |
+| 5 | `baseline_v2` | Fase 2 (Heurístico Contextual) | 0.4235 | 0.7169 | 76.6% | 0.6157 | 17 | 15.8s | 0.5474 | 0.020 | 0.2326 |
+| 6 | `baseline_smooth50` | Baseline Oficial | 0.3256 | 0.6207 | 71.3% | 0.5202 | 26 | 10.8s | 0.3225 | 0.048 | 0.0816 |
+| 7 | `baseline_smooth25` | Baseline Oficial | 0.2868 | 0.6200 | 69.1% | 0.4878 | 36 | 7.6s | 0.3857 | 0.056 | 0.2034 |
+| 8 | `baseline_raw` | Baseline Oficial | 0.0378 | 0.5972 | 65.1% | 0.4282 | 131 | 2.0s | 0.4197 | 0.046 | 0.1410 |
 
 ---
 

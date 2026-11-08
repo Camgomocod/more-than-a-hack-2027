@@ -25,6 +25,11 @@ DESCRIPTIONS = {
         "summary": "HMM Jerárquico con Decodificación Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisión (0.80).",
         "rank_official": 2,
     },
+    "model_bundesliga_trained": {
+        "phase": "Fase 5.2 (Entrenado en Bundesliga)",
+        "summary": "Emisiones supervisadas aprendidas sobre 145.967 frames de IDSSE Bundesliga (TRACAB) + Viterbi + Refinamiento.",
+        "rank_official": 3,
+    },
     "baseline_smooth125": {
         "phase": "Baseline Oficial",
         "summary": "Suavizado temporal por ventana móvil de 125 frames (5.0 s). Alta inercia, bajo recall en D (7.9%).",

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-08T13:26:55.426179",
+  "updated_at": "2026-11-08T13:51:25.128062",
   "competition": "More than a Hack 2027 \u2014 Phase 1: Ball Possession",
   "ground_truth_public_frames": 7500,
   "official_leaderboard": [
@@ -69,6 +69,38 @@
     },
     {
       "rank": 3,
+      "submission": "model_bundesliga_trained",
+      "phase": "Fase 5.2 (Entrenado en Bundesliga)",
+      "summary": "Emisiones supervisadas aprendidas sobre 145.967 frames de IDSSE Bundesliga (TRACAB) + Viterbi + Refinamiento.",
+      "macro_f1": 0.795914,
+      "spell_f1_mean": 0.5,
+      "n_pred_spells": 19,
+      "n_gt_spells": 17,
+      "mean_spell_duration_s": 13.688421,
+      "gt_mean_spell_duration_s": 14.190588,
+      "accuracy": 0.819333,
+      "kappa": 0.707141,
+      "alive_dead_f1": 0.942312,
+      "f1_H": 0.84713,
+      "f1_A": 0.83368,
+      "f1_D": 0.706931,
+      "precision_H": 0.809172,
+      "recall_H": 0.888825,
+      "precision_A": 0.813516,
+      "recall_A": 0.85487,
+      "precision_D": 0.873747,
+      "recall_D": 0.593601,
+      "share_err": 0.010805,
+      "gt_home_share": 0.572708,
+      "pred_home_share": 0.583513,
+      "mean_latency_frames": -0.428571,
+      "trans_f1_25": 0.325581,
+      "trans_precision_25": 0.304348,
+      "trans_recall_25": 0.35,
+      "fragmentation": 1.142857
+    },
+    {
+      "rank": 4,
       "submission": "baseline_smooth125",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 125 frames (5.0 s). Alta inercia, bajo recall en D (7.9%).",
@@ -100,7 +132,7 @@
       "fragmentation": 0.809524
     },
     {
-      "rank": 4,
+      "rank": 5,
       "submission": "baseline_v2",
       "phase": "Fase 2 (Heur\u00edstico Contextual)",
       "summary": "Hist\u00e9resis espacial (radio 2.5m, 8 frames), burbuja 5-NN (+4.3m) y fusi\u00f3n con Smart Tagging (Set Pieces).",
@@ -132,7 +164,7 @@
       "fragmentation": 1.142857
     },
     {
-      "rank": 5,
+      "rank": 6,
       "submission": "baseline_smooth50",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 50 frames (2.0 s).",
@@ -164,7 +196,7 @@
       "fragmentation": 1.428571
     },
     {
-      "rank": 6,
+      "rank": 7,
       "submission": "baseline_smooth25",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 25 frames (1.0 s).",
@@ -196,7 +228,7 @@
       "fragmentation": 1.904762
     },
     {
-      "rank": 7,
+      "rank": 8,
       "submission": "baseline_raw",
       "phase": "Baseline Oficial",
       "summary": "Asignaci\u00f3n frame a frame al jugador m\u00e1s cercano sin memoria temporal (131 micro-posesiones de 2.0s).",
