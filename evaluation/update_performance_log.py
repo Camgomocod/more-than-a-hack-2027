@@ -15,20 +15,25 @@ PERF_JSON = os.path.join(HERE, "performance_log.json")
 PERF_MD = os.path.join(ROOT, "docs", "performance_log.md")
 
 DESCRIPTIONS = {
+    "model_ensemble": {
+        "phase": "Fase 5.3 (Ensemble Bayesiano Unificado)",
+        "summary": "Fusión Bayesiana de emisiones físicas refinadas (α=0.35) y pesos supervisados de Bundesliga (0.65) + HMM Viterbi Global + Refinamiento cinemático de fronteras.",
+        "rank_official": 1,
+    },
     "model_viterbi_refined": {
         "phase": "Fase 5.1 (Modelo Refinado)",
         "summary": "HMM Jerárquico + Viterbi Global + Módulo de Refinamiento Cinemático de Fronteras (latencia cero, física pura).",
-        "rank_official": 1,
+        "rank_official": 2,
     },
     "model_viterbi": {
         "phase": "Fase 4 (HMM Viterbi Base)",
         "summary": "HMM Jerárquico con Decodificación Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisión (0.80).",
-        "rank_official": 2,
+        "rank_official": 3,
     },
     "model_bundesliga_trained": {
         "phase": "Fase 5.2 (Entrenado en Bundesliga)",
         "summary": "Emisiones supervisadas aprendidas sobre 145.967 frames de IDSSE Bundesliga (TRACAB) + Viterbi + Refinamiento.",
-        "rank_official": 3,
+        "rank_official": 4,
     },
     "baseline_smooth125": {
         "phase": "Baseline Oficial",
@@ -58,6 +63,27 @@ DESCRIPTIONS = {
 }
 
 EXTERNAL_BENCHMARKS = [
+    {
+        "model": "model_ensemble",
+        "dataset": "IDSSE (Bundesliga)",
+        "match": "1. FC Köln vs. FC Bayern München (DFL-MAT-J03WMX)",
+        "provider": "Sportec Solutions TRACAB (25 fps)",
+        "date": "2026-11-08",
+        "total_frames": 145967,
+        "duration_minutes": 97.3,
+        "macro_f1": 0.8227,
+        "spell_f1_mean": 0.4084,
+        "accuracy": 0.8313,
+        "kappa": 0.7420,
+        "alive_dead_f1": 0.9310,
+        "f1_H": 0.7760,
+        "f1_A": 0.7980,
+        "f1_D": 0.8940,
+        "share_err": 0.0076,
+        "gt_share_H": 0.4637,
+        "pred_share_H": 0.4561,
+        "notes": "Paso 5.3 Ensemble Bayesiano (fusión física + supervisada). Spell F1 récord en Bundesliga (0.4084) y error de share mínimo (0.76%)."
+    },
     {
         "model": "model_viterbi_refined",
         "dataset": "IDSSE (Bundesliga)",

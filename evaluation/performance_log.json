@@ -1,10 +1,42 @@
 {
-  "updated_at": "2026-11-08T13:51:25.128062",
+  "updated_at": "2026-11-08T16:32:04.184116",
   "competition": "More than a Hack 2027 \u2014 Phase 1: Ball Possession",
   "ground_truth_public_frames": 7500,
   "official_leaderboard": [
     {
       "rank": 1,
+      "submission": "model_ensemble",
+      "phase": "Fase 5.3 (Ensemble Bayesiano Unificado)",
+      "summary": "Fusi\u00f3n Bayesiana de emisiones f\u00edsicas refinadas (\u03b1=0.35) y pesos supervisados de Bundesliga (0.65) + HMM Viterbi Global + Refinamiento cinem\u00e1tico de fronteras.",
+      "macro_f1": 0.814787,
+      "spell_f1_mean": 0.544444,
+      "n_pred_spells": 19,
+      "n_gt_spells": 17,
+      "mean_spell_duration_s": 13.444211,
+      "gt_mean_spell_duration_s": 14.190588,
+      "accuracy": 0.831067,
+      "kappa": 0.72787,
+      "alive_dead_f1": 0.949022,
+      "f1_H": 0.859222,
+      "f1_A": 0.830203,
+      "f1_D": 0.754936,
+      "precision_H": 0.831528,
+      "recall_H": 0.888825,
+      "precision_A": 0.812175,
+      "recall_A": 0.849049,
+      "precision_D": 0.875224,
+      "recall_D": 0.663717,
+      "share_err": 0.005432,
+      "gt_home_share": 0.572708,
+      "pred_home_share": 0.57814,
+      "mean_latency_frames": -0.25,
+      "trans_f1_25": 0.363636,
+      "trans_precision_25": 0.333333,
+      "trans_recall_25": 0.4,
+      "fragmentation": 1.190476
+    },
+    {
+      "rank": 2,
       "submission": "model_viterbi_refined",
       "phase": "Fase 5.1 (Modelo Refinado)",
       "summary": "HMM Jer\u00e1rquico + Viterbi Global + M\u00f3dulo de Refinamiento Cinem\u00e1tico de Fronteras (latencia cero, f\u00edsica pura).",
@@ -36,7 +68,7 @@
       "fragmentation": 1.095238
     },
     {
-      "rank": 2,
+      "rank": 3,
       "submission": "model_viterbi",
       "phase": "Fase 4 (HMM Viterbi Base)",
       "summary": "HMM Jer\u00e1rquico con Decodificaci\u00f3n Global de Viterbi, matriz A con inercia Markoviana (0.995) y temperatura de emisi\u00f3n (0.80).",
@@ -68,7 +100,7 @@
       "fragmentation": 1.095238
     },
     {
-      "rank": 3,
+      "rank": 4,
       "submission": "model_bundesliga_trained",
       "phase": "Fase 5.2 (Entrenado en Bundesliga)",
       "summary": "Emisiones supervisadas aprendidas sobre 145.967 frames de IDSSE Bundesliga (TRACAB) + Viterbi + Refinamiento.",
@@ -100,7 +132,7 @@
       "fragmentation": 1.142857
     },
     {
-      "rank": 4,
+      "rank": 5,
       "submission": "baseline_smooth125",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 125 frames (5.0 s). Alta inercia, bajo recall en D (7.9%).",
@@ -132,7 +164,7 @@
       "fragmentation": 0.809524
     },
     {
-      "rank": 5,
+      "rank": 6,
       "submission": "baseline_v2",
       "phase": "Fase 2 (Heur\u00edstico Contextual)",
       "summary": "Hist\u00e9resis espacial (radio 2.5m, 8 frames), burbuja 5-NN (+4.3m) y fusi\u00f3n con Smart Tagging (Set Pieces).",
@@ -164,7 +196,7 @@
       "fragmentation": 1.142857
     },
     {
-      "rank": 6,
+      "rank": 7,
       "submission": "baseline_smooth50",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 50 frames (2.0 s).",
@@ -196,7 +228,7 @@
       "fragmentation": 1.428571
     },
     {
-      "rank": 7,
+      "rank": 8,
       "submission": "baseline_smooth25",
       "phase": "Baseline Oficial",
       "summary": "Suavizado temporal por ventana m\u00f3vil de 25 frames (1.0 s).",
@@ -228,7 +260,7 @@
       "fragmentation": 1.904762
     },
     {
-      "rank": 8,
+      "rank": 9,
       "submission": "baseline_raw",
       "phase": "Baseline Oficial",
       "summary": "Asignaci\u00f3n frame a frame al jugador m\u00e1s cercano sin memoria temporal (131 micro-posesiones de 2.0s).",
@@ -261,6 +293,27 @@
     }
   ],
   "external_benchmarks": [
+    {
+      "model": "model_ensemble",
+      "dataset": "IDSSE (Bundesliga)",
+      "match": "1. FC K\u00f6ln vs. FC Bayern M\u00fcnchen (DFL-MAT-J03WMX)",
+      "provider": "Sportec Solutions TRACAB (25 fps)",
+      "date": "2026-11-08",
+      "total_frames": 145967,
+      "duration_minutes": 97.3,
+      "macro_f1": 0.8227,
+      "spell_f1_mean": 0.4084,
+      "accuracy": 0.8313,
+      "kappa": 0.742,
+      "alive_dead_f1": 0.931,
+      "f1_H": 0.776,
+      "f1_A": 0.798,
+      "f1_D": 0.894,
+      "share_err": 0.0076,
+      "gt_share_H": 0.4637,
+      "pred_share_H": 0.4561,
+      "notes": "Paso 5.3 Ensemble Bayesiano (fusi\u00f3n f\u00edsica + supervisada). Spell F1 r\u00e9cord en Bundesliga (0.4084) y error de share m\u00ednimo (0.76%)."
+    },
     {
       "model": "model_viterbi_refined",
       "dataset": "IDSSE (Bundesliga)",
