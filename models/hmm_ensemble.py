@@ -13,26 +13,21 @@ sys.path.insert(0, os.path.join(ROOT, "starter"))
 
 from boundary_refinement import refine_transition_boundaries
 from hmm_viterbi import (
-    AWAY,
     DEAD,
     HALF_1_END,
     HALF_1_KICKOFF,
     HALF_2_END,
     HALF_2_KICKOFF,
     HALF_2_START,
-    HOME,
     LABEL_MAP,
     MIN_SPELL_FRAMES,
     N_FRAMES,
     NOBODY,
-    build_transition_matrix,
     compute_emission_log_probabilities,
     debounce_spells,
     viterbi_decode,
 )
 from hmm_viterbi_bundesliga import compute_bundesliga_trained_emissions
-
-from games import GAME, GAMES
 
 WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
 ALPHA = 0.35

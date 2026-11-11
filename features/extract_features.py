@@ -1,10 +1,8 @@
-import json
 import os
 import sys
 import xml.etree.ElementTree as ET
 
 import numpy as np
-import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)

@@ -1,9 +1,6 @@
-import json
 import os
 import sys
-import xml.etree.ElementTree as ET
 
-import numpy as np
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -12,8 +9,6 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "starter"))
 
 import load_smart_tagging as lst
-
-from games import GAME, GAMES
 
 GT_PATH = os.path.join(ROOT, "evaluation", "gt", "BAR-ATH_possession_gt_public.csv")
 

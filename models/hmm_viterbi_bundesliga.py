@@ -13,14 +13,12 @@ sys.path.insert(0, os.path.join(ROOT, "starter"))
 
 from boundary_refinement import refine_transition_boundaries
 from hmm_viterbi import (
-    AWAY,
     DEAD,
     HALF_1_END,
     HALF_1_KICKOFF,
     HALF_2_END,
     HALF_2_KICKOFF,
     HALF_2_START,
-    HOME,
     LABEL_MAP,
     MIN_SPELL_FRAMES,
     N_FRAMES,
@@ -29,8 +27,6 @@ from hmm_viterbi import (
     debounce_spells,
     viterbi_decode,
 )
-
-from games import GAME, GAMES
 
 WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
 
