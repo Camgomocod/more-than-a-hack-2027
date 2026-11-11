@@ -1,6 +1,7 @@
+import json
 import os
 import sys
-import json
+
 import numpy as np
 import pandas as pd
 
@@ -10,13 +11,26 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(ROOT, "starter"))
 
-from games import GAMES, GAME
-from hmm_viterbi import (
-    HOME, AWAY, DEAD, NOBODY, LABEL_MAP, N_FRAMES,
-    HALF_1_KICKOFF, HALF_1_END, HALF_2_START, HALF_2_KICKOFF, HALF_2_END,
-    build_transition_matrix, viterbi_decode, debounce_spells, MIN_SPELL_FRAMES
-)
 from boundary_refinement import refine_transition_boundaries
+from hmm_viterbi import (
+    AWAY,
+    DEAD,
+    HALF_1_END,
+    HALF_1_KICKOFF,
+    HALF_2_END,
+    HALF_2_KICKOFF,
+    HALF_2_START,
+    HOME,
+    LABEL_MAP,
+    MIN_SPELL_FRAMES,
+    N_FRAMES,
+    NOBODY,
+    build_transition_matrix,
+    debounce_spells,
+    viterbi_decode,
+)
+
+from games import GAME, GAMES
 
 WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
 

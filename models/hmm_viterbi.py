@@ -1,5 +1,6 @@
 import os
 import sys
+
 import numpy as np
 import pandas as pd
 
@@ -8,7 +9,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "starter"))
 
-from games import GAMES, GAME
+from games import GAME, GAMES
 
 HOME, AWAY, DEAD, NOBODY = 0, 1, 2, 3
 LABEL_MAP = {HOME: "H", AWAY: "A", DEAD: "D", NOBODY: "X"}

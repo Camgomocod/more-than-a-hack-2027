@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import xml.etree.ElementTree as ET
+
 import numpy as np
 import pandas as pd
 
@@ -10,7 +11,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "evaluation"))
 
-from games import GAMES, GAME
+from games import GAME, GAMES
 
 ATD_RAW_PATH = os.path.join(ROOT, "data", "tactical", "BAR-ATH_tactical_atd.txt")
 ATD_META_PATH = os.path.join(ROOT, "data", "tactical", "BAR-ATH_tactical_atd.xml")

@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import xml.etree.ElementTree as ET
+
 import numpy as np
 import pandas as pd
 
@@ -11,7 +12,8 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "starter"))
 
 import load_smart_tagging as lst
-from games import require, GAMES, GAME
+
+from games import GAME, GAMES, require
 
 FEATURES_NPZ_PATH = os.path.join(HERE, "features.npz")
 
