@@ -1,5 +1,3 @@
-"""Master Runner for Phase 1 EDA scripts."""
-
 import os
 import subprocess
 import sys

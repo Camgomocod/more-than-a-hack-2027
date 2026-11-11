@@ -1,7 +1,3 @@
-"""EDA 02: Ball Occlusion Dynamics, 5-NN Analysis & Interpolation Feasibility.
-Inspired by Borghesi et al. (2023) - Expert Systems with Applications.
-"""
-
 import json
 import os
 import sys
@@ -19,20 +15,17 @@ from games import GAMES, GAME
 ATD_RAW_PATH = os.path.join(ROOT, "data", "tactical", "BAR-ATH_tactical_atd.txt")
 ATD_META_PATH = os.path.join(ROOT, "data", "tactical", "BAR-ATH_tactical_atd.xml")
 GT_PATH = os.path.join(ROOT, "evaluation", "gt", "BAR-ATH_possession_gt_public.csv")
-REPORT_PATH = os.path.join(HERE, "reports", "report_02_ball_occlusions.md")
 
 FPS = 25.0
 PITCH_LEN, PITCH_WID = GAMES[GAME]["pitch"]
-
 
 def get_team_mapping():
     root = ET.parse(ATD_META_PATH).getroot()
     team_ids = [t.get("id") for t in root.iter("Team")]
     home_id = team_ids[0]
     slots = [p.get("teamId") for p in root.iter("Player")]
-    # 0 for Home, 1 for Away
-    return np.array([0 if s == home_id else 1 for s in slots], dtype=np.int8)
 
+    return np.array([0 if s == home_id else 1 for s in slots], dtype=np.int8)
 
 def run_analysis():
     print("=" * 70)
@@ -43,7 +36,6 @@ def run_analysis():
     n_tracks = len(team_of_track)
     print(f"Loaded {n_tracks} track slots. (Home: {(team_of_track==0).sum()}, Away: {(team_of_track==1).sum()})")
 
-    # 1. Load Ground Truth for cross-referencing
     gt_df = pd.read_csv(GT_PATH)
     gt_df.columns = [c.strip().lower() for c in gt_df.columns]
     gt_labels = gt_df["label"].values
@@ -53,7 +45,6 @@ def run_analysis():
     gt_min_frame = 11185
     gt_max_frame = 18684
 
-    # 2. Stream ATD file to collect ball status, gaps, and 5-NN distances
     print("Streaming ATD raw tracking data...")
 
     ball_seen = np.zeros(n_total_frames, dtype=bool)
@@ -61,7 +52,6 @@ def run_analysis():
     ball_x_m = np.full(n_total_frames, np.nan, dtype=np.float32)
     ball_y_m = np.full(n_total_frames, np.nan, dtype=np.float32)
 
-    # 5-NN distances (in metres) to nearest Home and Away players
     d_nearest_home = np.full(n_total_frames, np.nan, dtype=np.float32)
     d_nearest_away = np.full(n_total_frames, np.nan, dtype=np.float32)
 
@@ -75,7 +65,7 @@ def run_analysis():
                 continue
 
             ball = parts[2]
-            if ball.startswith("N"):  # NaN
+            if ball.startswith("N"):
                 continue
 
             ball_seen[frame_idx] = True
@@ -87,7 +77,6 @@ def run_analysis():
             if len(b_coords) > 2 and not b_coords[2].startswith("N"):
                 ball_speed[frame_idx] = float(b_coords[2])
 
-            # Compute distances to all available players
             players = parts[1].split(";")
             h_dists = []
             a_dists = []
@@ -111,12 +100,10 @@ def run_analysis():
 
     print("Tracking stream processed.")
 
-    # 3. Overall ball visibility
     total_ball_seen = ball_seen.sum()
     pct_total_seen = total_ball_seen / n_total_frames * 100
     print(f"Full Match Ball Visibility: {total_ball_seen:,} / {n_total_frames:,} frames ({pct_total_seen:.2f}%)")
 
-    # In public GT window
     gt_mask = (np.arange(n_total_frames) >= gt_min_frame) & (np.arange(n_total_frames) <= gt_max_frame)
     gt_ball_seen = ball_seen[gt_mask]
     n_gt_frames = gt_mask.sum()
@@ -124,8 +111,6 @@ def run_analysis():
     print(f"Public GT Window Ball Visibility: {gt_ball_seen.sum():,} / {n_gt_frames:,} frames ({pct_gt_seen:.2f}%)")
     print(f"Ball Missing in Public GT: {n_gt_frames - gt_ball_seen.sum():,} frames ({(100 - pct_gt_seen):.2f}%)")
 
-    # 4. Occlusion Gaps Extraction
-    # Find contiguous False runs in ball_seen
     missing_runs = []
     in_gap = False
     gap_start = 0
@@ -143,10 +128,9 @@ def run_analysis():
     gap_df = pd.DataFrame(missing_runs, columns=["start_frame", "end_frame", "length_frames"])
     gap_df["length_seconds"] = gap_df["length_frames"] / FPS
 
-    # Categorize gaps
-    micro_gaps = gap_df[gap_df["length_frames"] <= 12]  # <= 0.5s
-    med_gaps = gap_df[(gap_df["length_frames"] > 12) & (gap_df["length_frames"] <= 50)]  # 0.5s - 2.0s
-    long_gaps = gap_df[gap_df["length_frames"] > 50]  # > 2.0s
+    micro_gaps = gap_df[gap_df["length_frames"] <= 12]
+    med_gaps = gap_df[(gap_df["length_frames"] > 12) & (gap_df["length_frames"] <= 50)]
+    long_gaps = gap_df[gap_df["length_frames"] > 50]
 
     print("\n--- Gap Length Distribution (Full Match) ---")
     print(f"Total Gaps: {len(gap_df):,}")
@@ -154,7 +138,6 @@ def run_analysis():
     print(f"  Medium gaps (0.5s - 2s / 13-50f): {len(med_gaps):6d} gaps ({len(med_gaps)/len(gap_df)*100:5.1f}%) | {med_gaps['length_frames'].sum():,d} frames")
     print(f"  Long gaps (> 2.0s / > 50f):       {len(long_gaps):6d} gaps ({len(long_gaps)/len(gap_df)*100:5.1f}%) | {long_gaps['length_frames'].sum():,d} frames")
 
-    # 5. Cross-referencing Missing Ball with True State in Public GT
     gt_sub_labels = gt_labels[gt_mask]
     gt_sub_ball_seen = ball_seen[gt_mask]
     missing_mask_in_gt = ~gt_sub_ball_seen
@@ -165,21 +148,15 @@ def run_analysis():
     for lbl, cnt in missing_true_labels.items():
         print(f"  True Label '{lbl}': {cnt:5d} frames ({cnt / missing_mask_in_gt.sum()*100:5.2f}%)")
 
-    # Crucial insight: Alive vs Dead in missing ball
     alive_in_missing = missing_true_labels.get("H", 0) + missing_true_labels.get("A", 0)
     dead_in_missing = missing_true_labels.get("D", 0)
     print(f"  --> Actually ALIVE (H or A): {alive_in_missing} ({alive_in_missing / missing_mask_in_gt.sum()*100:.1f}%)")
     print(f"  --> Actually DEAD (D):       {dead_in_missing} ({dead_in_missing / missing_mask_in_gt.sum()*100:.1f}%)")
 
-    # 6. Evaluation of Forward-Fill Persistence
-    # If we forward-fill last observed team for gaps of length <= L, how many frames are correctly recovered?
-    # Let's test window thresholds: L in [0, 6, 12, 25, 50, 75, 125]
     print("\n--- Forward-Fill Recovery in Public GT ---")
     forward_fill_results = []
-    
-    # We simulate nearest player logic on the GT window:
-    # Baseline nearest player code:
-    base_team = np.full(n_gt_frames, -1, dtype=int)  # 0=H, 1=A, -1=nobody
+
+    base_team = np.full(n_gt_frames, -1, dtype=int)
     for idx_in_gt, f_idx in enumerate(range(gt_min_frame, gt_max_frame + 1)):
         if ball_seen[f_idx]:
             dh = d_nearest_home[f_idx]
@@ -201,7 +178,6 @@ def run_analysis():
                     if gap_len <= L and last_val != -1:
                         filled[i] = last_val
 
-        # Accuracy on GT-alive frames
         gt_alive_mask = (gt_sub_labels == "H") | (gt_sub_labels == "A")
         gt_alive_targets = np.where(gt_sub_labels[gt_alive_mask] == "H", 0, 1)
         pred_alive_calls = filled[gt_alive_mask]
@@ -210,7 +186,6 @@ def run_analysis():
         total_alive = gt_alive_mask.sum()
         acc_alive = correct_alive / total_alive * 100
 
-        # Number of frames remaining as nobody (-1 -> D)
         remaining_d = (filled == -1).sum()
 
         forward_fill_results.append({
@@ -222,8 +197,6 @@ def run_analysis():
         })
         print(f"  Window L={L:3d} ({L/FPS:4.2f}s): Acc on Alive: {acc_alive:5.2f}% | Correct: {correct_alive:5d}/{total_alive}")
 
-    # 7. 5-NN Proximity Analysis during True Possessions
-    # For frames where ball is seen in GT window:
     h_poss_mask = gt_mask & (gt_labels == "H") & ball_seen
     a_poss_mask = gt_mask & (gt_labels == "A") & ball_seen
 
@@ -238,61 +211,6 @@ def run_analysis():
     print(f"  Dist nearest Home player: {mean_dh_in_h:.2f} m | Dist nearest Away player: {mean_da_in_h:.2f} m (Delta: {mean_da_in_h - mean_dh_in_h:.2f} m)")
     print(f"When AWAY (Athletic) has possession:")
     print(f"  Dist nearest Away player: {mean_da_in_a:.2f} m | Dist nearest Home player: {mean_dh_in_a:.2f} m (Delta: {mean_dh_in_a - mean_da_in_a:.2f} m)")
-
-    # 8. Write Markdown Report
-    with open(REPORT_PATH, "w") as rep:
-        rep.write("# Reporte EDA 02: Dinámica de Oclusiones del Balón y Análisis 5-NN\n\n")
-        rep.write("*Basado en el framework de Borghesi et al. (2023), Expert Systems with Applications.*\n\n")
-
-        rep.write("## 1. Visibilidad Global del Balón\n\n")
-        rep.write(f"- **Partido Completo:** {total_ball_seen:,} frames con balón de {n_total_frames:,} ({pct_total_seen:.2f}% de visibilidad).\n")
-        rep.write(f"- **Ventana Calificada (Public GT):** {gt_ball_seen.sum():,} de {n_gt_frames:,} ({pct_gt_seen:.2f}% de visibilidad).\n")
-        rep.write(f"- **Oclusión en Tiempo de Juego:** En el **{(100-pct_gt_seen):.2f}%** de los frames puntuados el balón no es detectado por el tracking.\n\n")
-
-        rep.write("## 2. Distribución de la Duración de las Oclusiones (Gaps)\n\n")
-        rep.write("| Tipo de Oclusión | Rango (frames) | Rango (segundos) | Frecuencia de Gaps | % Total Gaps | Frames Totales Acumulados |\n")
-        rep.write("|---|---|---|---|---|---|\n")
-        rep.write(f"| **Micro-oclusiones** | $\\le 12$ | $\\le 0.48\\text{{ s}}$ | {len(micro_gaps):,} | {len(micro_gaps)/len(gap_df)*100:.1f}% | {micro_gaps['length_frames'].sum():,} |\n")
-        rep.write(f"| **Oclusiones Medias** | $13 - 50$ | $0.52 - 2.00\\text{{ s}}$ | {len(med_gaps):,} | {len(med_gaps)/len(gap_df)*100:.1f}% | {med_gaps['length_frames'].sum():,} |\n")
-        rep.write(f"| **Oclusiones Largas** | $> 50$ | $> 2.00\\text{{ s}}$ | {len(long_gaps):,} | {len(long_gaps)/len(gap_df)*100:.1f}% | {long_gaps['length_frames'].sum():,} |\n\n")
-
-        rep.write("> [!NOTE]\n")
-        rep.write(f"> El **{len(micro_gaps)/len(gap_df)*100:.1f}%** de las oclusiones son micro-gaps menores a medio segundo causados por oclusiones con jugadores o toques rápidos. No representan cambios de juego.\n\n")
-
-        rep.write("## 3. ¿Qué ocurre realmente en el juego cuando falta el balón?\n\n")
-        rep.write(f"Analizando los **{missing_mask_in_gt.sum():,} frames sin balón** dentro del Ground Truth calificado:\n\n")
-        rep.write("| Etiqueta Real en el Ground Truth | Frames | % de Frames sin Balón | Implicación en el Baseline Actual |\n")
-        rep.write("|---|---|---|---|\n")
-        rep.write(f"| **Home (`H` - Barcelona en posesión)** | {missing_true_labels.get('H', 0):,} | {missing_true_labels.get('H', 0)/missing_mask_in_gt.sum()*100:.2f}% | Asignado erróneamente como `D` |\n")
-        rep.write(f"| **Away (`A` - Athletic en posesión)** | {missing_true_labels.get('A', 0):,} | {missing_true_labels.get('A', 0)/missing_mask_in_gt.sum()*100:.2f}% | Asignado erróneamente como `D` |\n")
-        rep.write(f"| **Dead (`D` - Balón parado real)** | {missing_true_labels.get('D', 0):,} | {missing_true_labels.get('D', 0)/missing_mask_in_gt.sum()*100:.2f}% | Acierto accidental como `D` |\n\n")
-
-        rep.write("> [!CAUTION]\n")
-        rep.write(f"> **Hallazgo Crítico:** ¡El **{(alive_in_missing/missing_mask_in_gt.sum()*100):.1f}%** de los frames donde falta el balón corresponden a JUEGO VIVO (`H` o `A`)! Solo el {(dead_in_missing/missing_mask_in_gt.sum()*100):.1f}% son realmente balón muerto. Asignar `D` cuando el balón desaparece (como hace el baseline) corrompe directamente el 65% de esos frames.\n\n")
-
-        rep.write("## 4. Efecto de la Persistencia Temporal (*Forward-Fill*) en Juego Vivo\n\n")
-        rep.write("| Ventana $L$ (frames) | Ventana $L$ (segundos) | Frames Vivos Correctos | Precisión en Juego Vivo ($acc_{{POSS}}$) | Frames Restantes como `D` |\n")
-        rep.write("|---|---|---|---|---|\n")
-        for res in forward_fill_results:
-            rep.write(f"| {res['L_frames']} | {res['L_seconds']:.2f} s | {res['correct_alive_frames']:,} / {total_alive:,} | **{res['acc_alive_pct']:.2f}%** | {res['remaining_d_frames']:,} |\n")
-
-        rep.write("\n> [!TIP]\n")
-        rep.write("> Con un *forward-fill* de **50 frames (2.0 segundos)**, la precisión en juego activo salta del **59.3% al 85.1%**, alineándose directamente con las cifras reportadas por Borghesi et al. (84.9%).\n\n")
-
-        rep.write("## 5. Análisis de Proximidad 5-NN en Posesión Activa\n\n")
-        rep.write("| Estado de Posesión | Distancia Media Equipo Poseedor ($d_{{team}}$) | Distancia Media Rival ($d_{{rival}}$) | Diferencia de Control ($\\Delta d$) |\n")
-        rep.write("|---|---|---|---|\n")
-        rep.write(f"| **Barcelona en Posesión (`H`)** | **{mean_dh_in_h:.2f} m** | {mean_da_in_h:.2f} m | **+{mean_da_in_h - mean_dh_in_h:.2f} m** |\n")
-        rep.write(f"| **Athletic en Posesión (`A`)** | **{mean_da_in_a:.2f} m** | {mean_dh_in_a:.2f} m | **+{mean_dh_in_a - mean_da_in_a:.2f} m** |\n\n")
-
-        rep.write("### Conclusiones Metodológicas:\n")
-        rep.write("1. En posesión activa, el equipo con el balón tiene a su jugador más cercano en promedio a **~1.7 metros**, mientras que el defensor rival más próximo está a **~4.4 metros** (un margen de seguridad de casi 3 metros).\n")
-        rep.write("2. Esto valida la regla de **histéresis**: un rival no arrebata la posesión con un simple acercamiento a 3 metros; el umbral para iniciar disputa o pérdida debe exigir proximidad $< 2.0\\text{ m}$.\n")
-
-        rep.write("\n---\n*Generado automáticamente por `eda_02_ball_occlusions.py`.*")
-
-    print(f"\n[OK] Report written successfully to: {REPORT_PATH}")
-
 
 if __name__ == "__main__":
     run_analysis()

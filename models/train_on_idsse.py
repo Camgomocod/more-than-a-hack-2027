@@ -1,11 +1,3 @@
-"""Supervised Hierarchical Emission Trainer on IDSSE Bundesliga Tracking Data.
-Trains:
-1. Stage 1: Dead vs Alive (DA) binary logistic model.
-2. Stage 2: Home vs Away (POSS | Alive) symmetric logistic model.
-Exports learned analytical weights to models/bundesliga_weights.json.
-Zero-overfitting: trained on 145,967 frames of independent Bundesliga data.
-"""
-
 import xml.etree.ElementTree as ET
 import numpy as np
 import json
@@ -16,16 +8,14 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-HOME_ID = "DFL-CLU-000008"  # 1. FC Köln
-AWAY_ID = "DFL-CLU-00000G"  # FC Bayern München
+HOME_ID = "DFL-CLU-000008"
+AWAY_ID = "DFL-CLU-00000G"
 
 POS_FILE = os.path.join(ROOT, "data", "idsse", "DFL_04_03_positions_raw_observed_DFL-COM-000001_DFL-MAT-J03WMX.xml")
 OUT_WEIGHTS = os.path.join(HERE, "bundesliga_weights.json")
 
-
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
-
 
 def extract_match_dataset():
     print("=" * 70)
@@ -92,13 +82,13 @@ def extract_match_dataset():
                 ball_out[idx] = 1
 
             if status == "0":
-                gt_labels.append(2)  # DEAD
+                gt_labels.append(2)
             elif poss == "1":
-                gt_labels.append(0)  # HOME
+                gt_labels.append(0)
             elif poss == "2":
-                gt_labels.append(1)  # AWAY
+                gt_labels.append(1)
             else:
-                gt_labels.append(3)  # NOBODY
+                gt_labels.append(3)
 
             h_dists = [
                 np.hypot(home_player_frames[pid][fn][0] - bx, home_player_frames[pid][fn][1] - by)
@@ -137,9 +127,7 @@ def extract_match_dataset():
     print(f"Label breakdown: Home(H): {(gt_full==0).sum():,}, Away(A): {(gt_full==1).sum():,}, Dead(D): {(gt_full==2).sum():,}")
     return d_h_full, d_a_full, k5_ratio_full, ball_out_full, ball_speed_full, gt_full
 
-
 def train_logistic_regression(X, y, l2_reg=1e-4, lr=0.05, max_iter=200):
-    """Numerically stable vectorised logistic regression using gradient descent with momentum."""
     N, D = X.shape
     weights = np.zeros(D, dtype=np.float64)
     bias = 0.0
@@ -168,20 +156,18 @@ def train_logistic_regression(X, y, l2_reg=1e-4, lr=0.05, max_iter=200):
 
     return weights, bias
 
-
 def run_training():
     d_h, d_a, k5_ratio, ball_out, ball_speed, gt = extract_match_dataset()
 
     print("\n" + "=" * 70)
     print("2. Training Stage 1 Model: DA (Dead vs Alive Game)")
     print("=" * 70)
-    # y = 1 for DEAD (gt == 2), y = 0 for ALIVE (gt in [0, 1])
+
     y_da = (gt == 2).astype(np.float64)
 
     min_dist = np.minimum(d_h, d_a)
     dist_excess = np.maximum(0.0, min_dist - 3.0)
 
-    # Features for DA
     X_da = np.stack([
         ball_out.astype(np.float64),
         dist_excess.astype(np.float64),
@@ -197,18 +183,16 @@ def run_training():
     print("\n" + "=" * 70)
     print("3. Training Stage 2 Model: POSS (Home vs Away | Alive)")
     print("=" * 70)
-    # Alive mask
+
     alive_mask = (gt == 0) | (gt == 1)
     d_h_alive = d_h[alive_mask]
     d_a_alive = d_a[alive_mask]
     k5_alive = k5_ratio[alive_mask]
-    y_poss_orig = (gt[alive_mask] == 0).astype(np.float64)  # 1 for Home, 0 for Away
+    y_poss_orig = (gt[alive_mask] == 0).astype(np.float64)
 
     delta_d_alive = np.clip(d_h_alive - d_a_alive, -8.0, 8.0)
     k5_centered = k5_alive - 0.5
 
-    # Symmetric Data Augmentation: duplicate every frame with Home/Away swapped
-    # Guarantees zero bias between Home and Away!
     X_poss_orig = np.stack([delta_d_alive, k5_centered], axis=1)
     X_poss_swap = np.stack([-delta_d_alive, -k5_centered], axis=1)
     y_poss_swap = 1.0 - y_poss_orig
@@ -224,7 +208,6 @@ def run_training():
     for name, w in zip(feature_names_poss, w_poss):
         print(f"  Weight [{name}]: {w:.4f}")
 
-    # Export learned parameters
     weights_dict = {
         "dataset": "IDSSE Bundesliga (DFL-MAT-J03WMX)",
         "total_training_frames": len(gt),
@@ -244,7 +227,6 @@ def run_training():
 
     print(f"\n[OK] Trained weights successfully saved to: {OUT_WEIGHTS}")
     return weights_dict
-
 
 if __name__ == "__main__":
     run_training()

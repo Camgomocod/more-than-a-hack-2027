@@ -1,9 +1,3 @@
-"""Hierarchical Hidden Markov Model (HMM) with Viterbi Decoding.
-Phase 4: Probabilistic sequential modeling for Ball Possession.
-Decomposes problem into Stage 1 (Dead vs Alive) and Stage 2 (Home vs Away | Alive).
-Based on Borghesi et al. (2023) - Expert Systems with Applications.
-"""
-
 import os
 import sys
 import numpy as np
@@ -16,41 +10,29 @@ sys.path.insert(0, os.path.join(ROOT, "starter"))
 
 from games import GAMES, GAME
 
-# Alphabet & Constants
-# Competition standard: H=0, A=1, D=2, X=3
 HOME, AWAY, DEAD, NOBODY = 0, 1, 2, 3
 LABEL_MAP = {HOME: "H", AWAY: "A", DEAD: "D", NOBODY: "X"}
 CODE_MAP = {"H": HOME, "A": AWAY, "D": DEAD, "X": NOBODY}
 
 N_FRAMES = GAMES[GAME]["n_video_frames"]
 
-# Structural match bounds from games.py
 HALF_1_KICKOFF = 11185
 HALF_1_END = 90651
 HALF_2_START = 110808
 HALF_2_KICKOFF = 113742
 HALF_2_END = 190197
 
-# Model hyperparameters
-P_STAY = 0.9950        # Temporal inertia (self-transition probability)
-P_SWITCH = 0.0020      # Direct cross-team transition probability
-EMIT_SCALE = 0.80      # Temperature scaling on emission log-likelihoods
-MIN_SPELL_FRAMES = 50  # Debounce filter: minimum spell length (2.0s at 25 fps)
-
+P_STAY = 0.9950
+P_SWITCH = 0.0020
+EMIT_SCALE = 0.80
+MIN_SPELL_FRAMES = 50
 
 def sigmoid(x):
-    """Numerically stable sigmoid."""
     return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
 
-
 def compute_emission_log_probabilities(feats):
-    """Compute continuous emission log-probabilities for {H, A, D} using hierarchical decomposition.
-    
-    Stage 1: P(Dead) vs P(Alive)
-    Stage 2: P(Home | Alive) vs P(Away | Alive)
-    """
     print("Computing hierarchical emission distributions...")
-    
+
     delta_d = feats["delta_d_m"]
     d_h = feats["d_nearest_home_m"]
     d_a = feats["d_nearest_away_m"]
@@ -61,7 +43,6 @@ def compute_emission_log_probabilities(feats):
     open_team = feats["open_play_team"]
     streak = feats["missing_streak_frames"]
 
-    # 1. Stage 1: Dead vs Alive
     z_dead = (
         -2.8
         + 6.0 * out_pitch
@@ -74,7 +55,6 @@ def compute_emission_log_probabilities(feats):
     p_dead = np.where(out_pitch == 1, 0.999, p_dead)
     p_alive = 1.0 - p_dead
 
-    # 2. Stage 2: Home vs Away | Alive
     z_poss = (
         - 1.5 * np.clip(delta_d, -8.0, 8.0)
         + 2.0 * (k5_ratio - 0.5)
@@ -83,27 +63,21 @@ def compute_emission_log_probabilities(feats):
     p_h_alive = sigmoid(z_poss)
     p_a_alive = 1.0 - p_h_alive
 
-    # 3. Joint emission probabilities P(S_t | X_t)
     p_h = np.maximum(1e-6, p_alive * p_h_alive)
     p_a = np.maximum(1e-6, p_alive * p_a_alive)
     p_d = np.maximum(1e-6, p_dead)
 
-    # Normalize across the 3 states
     total = p_h + p_a + p_d
     p_h /= total
     p_a /= total
     p_d /= total
 
-    # Log probabilities with temperature scaling
     log_emissions = np.stack([np.log(p_h), np.log(p_a), np.log(p_d)], axis=1) * EMIT_SCALE
     return log_emissions
 
-
 def build_transition_matrix():
-    """Construct 3x3 Markov transition matrix in log space."""
     A = np.zeros((3, 3), dtype=np.float64)
-    # 0: H, 1: A, 2: D
-    # Diagonal self-transitions
+
     A[0, 0] = P_STAY
     A[0, 1] = P_SWITCH * 0.2
     A[0, 2] = 1.0 - A[0, 0] - A[0, 1]
@@ -119,32 +93,18 @@ def build_transition_matrix():
 
     return np.log(np.maximum(1e-12, A))
 
-
 def viterbi_decode(log_emissions, log_A):
-    """Dynamic programming Viterbi decoder in log-space.
-    
-    Args:
-        log_emissions: (T, 3) log emission matrix
-        log_A: (3, 3) log transition matrix
-        
-    Returns:
-        best_path: (T,) array with state indices in {0: H, 1: A, 2: D}
-    """
     T, K = log_emissions.shape
     viterbi = np.zeros((T, K), dtype=np.float64)
     backpointer = np.zeros((T, K), dtype=np.int32)
 
-    # Initialize at t=0
     viterbi[0] = log_emissions[0]
 
-    # Forward dynamic programming pass
     for t in range(1, T):
-        # Broadcasting scores: viterbi[t-1, i] + log_A[i, j]
-        scores = viterbi[t - 1, :, None] + log_A  # Shape: (K, K)
-        backpointer[t] = np.argmax(scores, axis=0)  # Shape: (K,)
+        scores = viterbi[t - 1, :, None] + log_A
+        backpointer[t] = np.argmax(scores, axis=0)
         viterbi[t] = np.max(scores, axis=0) + log_emissions[t]
 
-    # Backward traceback pass
     best_path = np.zeros(T, dtype=np.int8)
     best_path[-1] = np.argmax(viterbi[-1])
     for t in range(T - 2, -1, -1):
@@ -152,9 +112,7 @@ def viterbi_decode(log_emissions, log_A):
 
     return best_path
 
-
 def debounce_spells(labels, min_length=MIN_SPELL_FRAMES):
-    """Absorb micro-spells shorter than min_length into surrounding context."""
     labels_clean = labels.copy()
     change_idx = np.where(labels_clean[:-1] != labels_clean[1:])[0] + 1
     splits = np.concatenate(([0], change_idx, [len(labels_clean)]))
@@ -175,13 +133,11 @@ def debounce_spells(labels, min_length=MIN_SPELL_FRAMES):
 
     return labels_clean
 
-
 def run_hmm_viterbi_pipeline():
     print("=" * 70)
-    print("Phase 4: Hierarchical HMM + Viterbi Decoding Pipeline")
+    print("Running Hierarchical HMM Viterbi Pipeline...")
     print("=" * 70)
 
-    # 1. Load features
     feats_path = os.path.join(ROOT, "features", "features.npz")
     if not os.path.exists(feats_path):
         raise FileNotFoundError(f"Features file not found at {feats_path}. Run features/extract_features.py first.")
@@ -189,32 +145,26 @@ def run_hmm_viterbi_pipeline():
     print(f"Loading features from {os.path.basename(feats_path)}...")
     feats = np.load(feats_path)
 
-    # 2. Compute emissions & transition matrix
     log_emissions = compute_emission_log_probabilities(feats)
     log_A = build_transition_matrix()
 
-    # 3. Allocate full match predictions
     final_preds = np.full(N_FRAMES, NOBODY, dtype=np.int8)
 
-    # 4. Decode First Half (HALF_1_KICKOFF to HALF_1_END)
     print(f"\nDecoding First Half: frames {HALF_1_KICKOFF:,} to {HALF_1_END:,} ({HALF_1_END - HALF_1_KICKOFF:,} frames)...")
     h1_emits = log_emissions[HALF_1_KICKOFF:HALF_1_END]
     h1_path = viterbi_decode(h1_emits, log_A)
     h1_clean = debounce_spells(h1_path, MIN_SPELL_FRAMES)
     final_preds[HALF_1_KICKOFF:HALF_1_END] = h1_clean
 
-    # 5. Fixed match structure: 2nd half pre-kickoff is DEAD
     print(f"Assigning Second Half pre-kickoff: frames {HALF_2_START:,} to {HALF_2_KICKOFF:,} -> DEAD")
     final_preds[HALF_2_START:HALF_2_KICKOFF] = DEAD
 
-    # 6. Decode Second Half (HALF_2_KICKOFF to HALF_2_END)
     print(f"Decoding Second Half: frames {HALF_2_KICKOFF:,} to {HALF_2_END:,} ({HALF_2_END - HALF_2_KICKOFF:,} frames)...")
     h2_emits = log_emissions[HALF_2_KICKOFF:HALF_2_END]
     h2_path = viterbi_decode(h2_emits, log_A)
     h2_clean = debounce_spells(h2_path, MIN_SPELL_FRAMES)
     final_preds[HALF_2_KICKOFF:HALF_2_END] = h2_clean
 
-    # 7. Write submission CSV
     out_dir = os.path.join(ROOT, "evaluation", "results")
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "model_viterbi.csv")
@@ -229,7 +179,6 @@ def run_hmm_viterbi_pipeline():
     print(df_out["label"].value_counts().to_string())
 
     return out_path
-
 
 if __name__ == "__main__":
     run_hmm_viterbi_pipeline()
