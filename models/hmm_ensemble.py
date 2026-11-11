@@ -25,6 +25,14 @@ ALPHA = 0.35
 P_STAY = 0.9950
 
 def build_ensemble_transition_matrix(p_stay=P_STAY):
+    """Build the logarithmic state transition matrix for the ensemble model.
+
+    Args:
+        p_stay (float): Probability of self-transition (remaining in the current state).
+
+    Returns:
+        np.ndarray: Log-transition probability matrix of shape (3, 3).
+    """
     A = np.zeros((3, 3), dtype=np.float64)
     A[0, 0] = p_stay
     A[0, 1] = 0.0004
@@ -42,6 +50,11 @@ def build_ensemble_transition_matrix(p_stay=P_STAY):
     return np.log(np.maximum(1e-12, A))
 
 def run_ensemble_pipeline():
+    """Execute the unified Bayesian ensemble inference pipeline.
+
+    Returns:
+        str: File path to the generated submission CSV.
+    """
     print("=" * 70)
     print("Running Ensemble Pipeline...")
     print("=" * 70)

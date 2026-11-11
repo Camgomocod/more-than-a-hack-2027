@@ -21,9 +21,27 @@ from boundary_refinement import refine_transition_boundaries
 WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
 
 def sigmoid(x):
+    """Apply the numerically clipped sigmoid activation function.
+
+    Args:
+        x (np.ndarray or float): Input scalar or array.
+
+    Returns:
+        np.ndarray or float: Transformed value bounded in (0, 1).
+    """
     return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
 
 def compute_bundesliga_trained_emissions(feats, weights_dict, emit_scale=0.80):
+    """Compute continuous emission log-probabilities using Bundesliga-trained weights.
+
+    Args:
+        feats (dict or np.lib.npyio.NpzFile): Pre-extracted match feature dictionary.
+        weights_dict (dict): Dictionary containing learned logistic regression weights.
+        emit_scale (float, optional): Scaling temperature factor for emissions.
+
+    Returns:
+        np.ndarray: Array of shape (N, 3) containing log-emission probabilities.
+    """
     print("Computing emissions using Bundesliga-trained weights...")
 
     delta_d = feats["delta_d_m"]
@@ -81,6 +99,11 @@ def compute_bundesliga_trained_emissions(feats, weights_dict, emit_scale=0.80):
     return log_emissions
 
 def run_pipeline():
+    """Execute the Bundesliga-trained HMM Viterbi inference pipeline.
+
+    Returns:
+        str: File path to the generated CSV prediction file.
+    """
     print("=" * 70)
     print("Running Bundesliga-Trained HMM Pipeline...")
     print("=" * 70)

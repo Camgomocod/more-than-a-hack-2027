@@ -11,6 +11,20 @@ def refine_transition_boundaries(
     window_dead=35,
     window_live=15,
 ):
+    """Refine temporal transition boundaries using ball kinematics and player proximity.
+
+    Args:
+        labels (np.ndarray): 1D array of predicted frame-level state labels.
+        d_h (np.ndarray): Distance from ball to nearest Home player in meters.
+        d_a (np.ndarray): Distance from ball to nearest Away player in meters.
+        ball_out (np.ndarray): Binary indicator for ball out of pitch boundaries.
+        ball_speed (np.ndarray, optional): Instantaneous ball speed in m/s.
+        window_dead (int): Maximum backward search window for dead-ball transitions.
+        window_live (int): Search window for team possession change transitions.
+
+    Returns:
+        np.ndarray: State label array with kinematically refined transition boundaries.
+    """
     refined = labels.copy()
     N = len(refined)
     change_idx = np.where(refined[:-1] != refined[1:])[0] + 1

@@ -28,9 +28,25 @@ EMIT_SCALE = 0.80
 MIN_SPELL_FRAMES = 50
 
 def sigmoid(x):
+    """Apply the numerically clipped sigmoid activation function.
+
+    Args:
+        x (np.ndarray or float): Input scalar or array.
+
+    Returns:
+        np.ndarray or float: Transformed value bounded in (0, 1).
+    """
     return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
 
 def compute_emission_log_probabilities(feats):
+    """Compute continuous emission log-probabilities for states {H, A, D}.
+
+    Args:
+        feats (dict or np.lib.npyio.NpzFile): Pre-extracted match feature dictionary.
+
+    Returns:
+        np.ndarray: Array of shape (N, 3) containing log-emission probabilities.
+    """
     print("Computing hierarchical emission distributions...")
 
     delta_d = feats["delta_d_m"]
@@ -76,6 +92,11 @@ def compute_emission_log_probabilities(feats):
     return log_emissions
 
 def build_transition_matrix():
+    """Construct the first-order Markov transition matrix in log-space.
+
+    Returns:
+        np.ndarray: Log-transition matrix of shape (3, 3).
+    """
     A = np.zeros((3, 3), dtype=np.float64)
 
     A[0, 0] = P_STAY
@@ -94,6 +115,15 @@ def build_transition_matrix():
     return np.log(np.maximum(1e-12, A))
 
 def viterbi_decode(log_emissions, log_A):
+    """Decode the globally optimal state sequence using the Viterbi algorithm.
+
+    Args:
+        log_emissions (np.ndarray): Emission log-probabilities of shape (T, K).
+        log_A (np.ndarray): State transition log-probabilities of shape (K, K).
+
+    Returns:
+        np.ndarray: 1D array of length T with the most probable state sequence.
+    """
     T, K = log_emissions.shape
     viterbi = np.zeros((T, K), dtype=np.float64)
     backpointer = np.zeros((T, K), dtype=np.int32)
@@ -113,6 +143,15 @@ def viterbi_decode(log_emissions, log_A):
     return best_path
 
 def debounce_spells(labels, min_length=MIN_SPELL_FRAMES):
+    """Filter out spurious short possession spells below a minimum duration.
+
+    Args:
+        labels (np.ndarray): 1D array of frame-level state predictions.
+        min_length (int): Minimum consecutive frames required to retain a spell.
+
+    Returns:
+        np.ndarray: Debounced state sequence array.
+    """
     labels_clean = labels.copy()
     change_idx = np.where(labels_clean[:-1] != labels_clean[1:])[0] + 1
     splits = np.concatenate(([0], change_idx, [len(labels_clean)]))
@@ -134,6 +173,11 @@ def debounce_spells(labels, min_length=MIN_SPELL_FRAMES):
     return labels_clean
 
 def run_hmm_viterbi_pipeline():
+    """Execute the baseline hierarchical HMM Viterbi inference pipeline.
+
+    Returns:
+        str: Path to the generated CSV prediction file.
+    """
     print("=" * 70)
     print("Running Hierarchical HMM Viterbi Pipeline...")
     print("=" * 70)

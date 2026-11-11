@@ -10,6 +10,7 @@ SCRIPTS = [
 ]
 
 def main():
+    """Execute all Phase 1 exploratory data analysis scripts sequentially."""
     print("======================================================================")
     print("Executing All Phase 1 EDA Integrables")
     print("======================================================================")

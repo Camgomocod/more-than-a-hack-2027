@@ -23,6 +23,14 @@ N_FRAMES = GAMES[GAME]["n_video_frames"]
 HOME, AWAY, NOBODY = 0, 1, -1
 
 def get_team_mapping(meta_path):
+    """Extract player slot to team affiliation mapping from ATD metadata.
+
+    Args:
+        meta_path (str): File path to the ATD tracking metadata XML.
+
+    Returns:
+        np.ndarray: 1D array mapping each player slot to HOME (0) or AWAY (1).
+    """
     root = ET.parse(meta_path).getroot()
     team_ids = [t.get("id") for t in root.iter("Team")]
     home_id = team_ids[0]
@@ -30,6 +38,11 @@ def get_team_mapping(meta_path):
     return np.array([HOME if s == home_id else AWAY for s in slots], dtype=np.int8)
 
 def extract_smart_tagging_features():
+    """Extract tactical context priors and set-piece proximity features.
+
+    Returns:
+        dict: Dictionary of temporal distance arrays and phase indicator arrays.
+    """
     print("Parsing Smart Tagging contextual priors...")
     events = lst.load()
 
@@ -88,6 +101,10 @@ def extract_smart_tagging_features():
     }
 
 def run_feature_extraction():
+    """Execute kinematic, spatial, and contextual feature extraction across all frames.
+
+    Extracts 19 time-synchronized features and saves them to a compressed NPZ archive.
+    """
     print("=" * 70)
     print("Fase 3: Feature Extraction Pipeline")
     print("=" * 70)

@@ -15,9 +15,22 @@ POS_FILE = os.path.join(ROOT, "data", "idsse", "DFL_04_03_positions_raw_observed
 OUT_WEIGHTS = os.path.join(HERE, "bundesliga_weights.json")
 
 def sigmoid(x):
+    """Apply the numerically clipped sigmoid activation function.
+
+    Args:
+        x (np.ndarray or float): Input scalar or array.
+
+    Returns:
+        np.ndarray or float: Transformed value bounded in (0, 1).
+    """
     return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
 
 def extract_match_dataset():
+    """Extract and parse tracking and possession ground-truth from Bundesliga XML.
+
+    Returns:
+        tuple: Tuple containing (d_h, d_a, k5_ratio, ball_out, ball_speed, gt_labels).
+    """
     print("=" * 70)
     print("1. Extracting 145,967 Frames of Tracking Data from IDSSE Bundesliga...")
     print("=" * 70)
@@ -128,6 +141,18 @@ def extract_match_dataset():
     return d_h_full, d_a_full, k5_ratio_full, ball_out_full, ball_speed_full, gt_full
 
 def train_logistic_regression(X, y, l2_reg=1e-4, lr=0.05, max_iter=200):
+    """Train binary logistic regression using gradient descent with momentum.
+
+    Args:
+        X (np.ndarray): Feature matrix of shape (N, D).
+        y (np.ndarray): Binary ground-truth vector of length N.
+        l2_reg (float, optional): L2 regularization penalty factor.
+        lr (float, optional): Learning rate for parameter updates.
+        max_iter (int, optional): Maximum optimization iterations.
+
+    Returns:
+        tuple: Learned parameter tuple (weights, bias).
+    """
     N, D = X.shape
     weights = np.zeros(D, dtype=np.float64)
     bias = 0.0
@@ -157,6 +182,11 @@ def train_logistic_regression(X, y, l2_reg=1e-4, lr=0.05, max_iter=200):
     return weights, bias
 
 def run_training():
+    """Execute the supervised training pipeline on the Bundesliga dataset.
+
+    Returns:
+        dict: Structured dictionary containing learned weights and metadata.
+    """
     d_h, d_a, k5_ratio, ball_out, ball_speed, gt = extract_match_dataset()
 
     print("\n" + "=" * 70)

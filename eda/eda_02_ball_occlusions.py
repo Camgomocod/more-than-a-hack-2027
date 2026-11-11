@@ -20,6 +20,11 @@ FPS = 25.0
 PITCH_LEN, PITCH_WID = GAMES[GAME]["pitch"]
 
 def get_team_mapping():
+    """Load tracking metadata XML and extract team affiliations.
+
+    Returns:
+        np.ndarray: 1D array with team mapping (0: Home, 1: Away) per player slot.
+    """
     root = ET.parse(ATD_META_PATH).getroot()
     team_ids = [t.get("id") for t in root.iter("Team")]
     home_id = team_ids[0]
@@ -28,6 +33,7 @@ def get_team_mapping():
     return np.array([0 if s == home_id else 1 for s in slots], dtype=np.int8)
 
 def run_analysis():
+    """Analyze ball occlusion dynamics, gap distributions, and player proximity."""
     print("=" * 70)
     print("EDA 02: Ball Occlusion Dynamics, 5-NN Analysis & Interpolation")
     print("=" * 70)

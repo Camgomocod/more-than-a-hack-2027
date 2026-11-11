@@ -14,6 +14,10 @@ META_PATH = os.path.join(ROOT, "evaluation", "gt", "BAR-ATH_possession_gt_public
 FPS = 25.0
 
 def run_analysis():
+    """Execute statistical ground-truth analysis on the public possession annotations.
+
+    Computes class distributions, spell duration dynamics, and empirical state transitions.
+    """
     print("=" * 70)
     print("EDA 01: Ground Truth Analysis & Hierarchical Decomposition")
     print("=" * 70)
@@ -91,6 +95,14 @@ def run_analysis():
     d_dur = dead_df["dur_seconds"]
 
     def stats_summary(s):
+        """Compute descriptive summary statistics for a duration series.
+
+        Args:
+            s (pd.Series): Sequence of numerical duration values.
+
+        Returns:
+            dict: Summary metrics including count, mean, std, quantiles, and bounds.
+        """
         return {
             "count": len(s),
             "mean": s.mean() if len(s) else 0,

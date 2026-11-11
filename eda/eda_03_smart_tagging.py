@@ -20,6 +20,7 @@ GT_MIN = 11185
 GT_MAX = 18684
 
 def run_analysis():
+    """Analyze tactical Smart Tagging events and their correlation with dead-ball phases."""
     print("=" * 70)
     print("EDA 03: Smart Tagging Mapping & Dead-Ball / Possession Priors")
     print("=" * 70)
