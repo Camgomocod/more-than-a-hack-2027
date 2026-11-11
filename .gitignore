@@ -25,6 +25,8 @@ evaluation/results/*.csv
 !evaluation/results/baseline_*.csv
 !evaluation/results/model_*.csv
 evaluation/reports/
+reports/
+**/reports/
 evaluation/scoreboard.csv
 
 # -- gated data --------------------------------------------------------------------------------
