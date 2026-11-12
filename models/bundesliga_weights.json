@@ -1,0 +1,19 @@
+{
+  "dataset": "IDSSE Bundesliga (DFL-MAT-J03WMX)",
+  "total_training_frames": 145967,
+  "trained_at": "2026-11-08 13:49:36",
+  "model_da": {
+    "bias": -1.979569020064122,
+    "weights": {
+      "ball_out_of_pitch": 4.544011808116512,
+      "min_dist_excess_3m": 0.33303754203312086
+    }
+  },
+  "model_poss": {
+    "bias": 1.7632180331727863e-17,
+    "weights": {
+      "delta_d_m": -0.3700341079393645,
+      "k5_home_ratio_centered": -0.8277529267729787
+    }
+  }
+}
