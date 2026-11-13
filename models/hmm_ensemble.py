@@ -33,7 +33,8 @@ WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
 ALPHA = 0.35  # Blends 35% physical heuristics with 65% Bundesliga supervised weights (optimal spellF1)
 P_STAY = 0.9950  # Markov prior: 1/(1-p)=200 frames (8.0s expected duration at 25 Hz, matching GT median)
 
-DEAD_BOOST = 3.5
+DEAD_BOOST = 2.5
+DEAD_SPEED_THRESHOLD = 4.0
 
 def build_ensemble_transition_matrix(p_stay=P_STAY):
     """Build the logarithmic state transition matrix for the ensemble model.
@@ -93,7 +94,9 @@ def run_ensemble_pipeline():
     print(f"Blending emission log-distributions (alpha={ALPHA:.2f})...")
     log_emissions = ALPHA * emits_refined + (1.0 - ALPHA) * emits_bundesliga
 
-    extra_dead = DEAD_BOOST * (1 - in_open) * np.maximum(0.0, (2.0 - ball_speed) / 2.0)
+    extra_dead = DEAD_BOOST * (1 - in_open) * np.maximum(
+        0.0, (DEAD_SPEED_THRESHOLD - ball_speed) / DEAD_SPEED_THRESHOLD
+    )
     log_emissions[:, 2] += extra_dead
 
     max_e = np.max(log_emissions, axis=1, keepdims=True)

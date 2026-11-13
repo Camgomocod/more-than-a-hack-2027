@@ -36,6 +36,9 @@ OUTPUT_PATH = os.path.join(ROOT, "evaluation", "results", "model_consensus.csv")
 DEBOUNCE_MIN_FRAMES = 25
 
 
+WINDOW_LIVE = 20
+
+
 def read_predictions(file_path):
     """Read a submission CSV file and return the integer label array.
 
@@ -82,11 +85,21 @@ def build_consensus_predictions():
         slice_spd = ball_speed[start:end]
 
         stage1 = refine_transition_boundaries(
-            consensus[start:end], slice_d_h, slice_d_a, slice_out, slice_spd
+            consensus[start:end],
+            slice_d_h,
+            slice_d_a,
+            slice_out,
+            slice_spd,
+            window_live=WINDOW_LIVE,
         )
         stage2 = debounce_spells(stage1, DEBOUNCE_MIN_FRAMES)
         stage3 = refine_transition_boundaries(
-            stage2, slice_d_h, slice_d_a, slice_out, slice_spd
+            stage2,
+            slice_d_h,
+            slice_d_a,
+            slice_out,
+            slice_spd,
+            window_live=WINDOW_LIVE,
         )
         consensus[start:end] = stage3
 
