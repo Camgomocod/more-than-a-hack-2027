@@ -1,0 +1,24 @@
+{
+  "ball_clean_path": "C:\\Barcelona2026\\more-than-a-hack-2027\\models\\akima_with_data_prep\\ball_clean.npz",
+  "raw_atd_path": "C:\\Barcelona2026\\more-than-a-hack-2027\\data\\tactical\\BAR-ATH_tactical_atd.txt",
+  "atd_meta_path": "C:\\Barcelona2026\\more-than-a-hack-2027\\data\\tactical\\BAR-ATH_tactical_atd.xml",
+  "n_frames": 199319,
+  "modes": {
+    "long_lastseen": "C:\\Barcelona2026\\more-than-a-hack-2027\\models\\ball_clean_ensemble\\features_clean_long_lastseen.npz",
+    "rawmissing": "C:\\Barcelona2026\\more-than-a-hack-2027\\models\\ball_clean_ensemble\\features_clean_rawmissing.npz",
+    "centroidref": "C:\\Barcelona2026\\more-than-a-hack-2027\\models\\ball_clean_ensemble\\features_clean_centroidref.npz"
+  },
+  "counts": {
+    "observed": 113488,
+    "imputed": 185,
+    "missing_long": 85646,
+    "missing_raw": 85831
+  },
+  "reference_modes": {
+    "long_lastseen": "last_seen",
+    "rawmissing": "last_seen",
+    "centroidref": "centroid_of_5nn_around_last_seen"
+  },
+  "built_at": "2026-11-12 17:25:23",
+  "runtime_seconds": 29.229
+}
