@@ -30,8 +30,10 @@ from hmm_viterbi import (
 from hmm_viterbi_bundesliga import compute_bundesliga_trained_emissions
 
 WEIGHTS_FILE = os.path.join(HERE, "bundesliga_weights.json")
-ALPHA = 0.35
-P_STAY = 0.9950
+ALPHA = 0.35  # Blends 35% physical heuristics with 65% Bundesliga supervised weights (optimal spellF1)
+P_STAY = 0.9950  # Markov prior: 1/(1-p)=200 frames (8.0s expected duration at 25 Hz, matching GT median)
+
+DEAD_BOOST = 3.5
 
 def build_ensemble_transition_matrix(p_stay=P_STAY):
     """Build the logarithmic state transition matrix for the ensemble model.
@@ -80,15 +82,24 @@ def run_ensemble_pipeline():
     d_a = feats["d_nearest_away_m"]
     ball_out = feats["ball_out_of_pitch"]
     ball_speed = feats["ball_speed_mps"]
+    in_open = feats["in_open_play_phase"]
 
-    print(f"Computing refined physical emissions...")
+    print("Computing refined physical emissions...")
     emits_refined = compute_emission_log_probabilities(feats)
 
-    print(f"Computing Bundesliga-trained emissions...")
+    print("Computing Bundesliga-trained emissions...")
     emits_bundesliga = compute_bundesliga_trained_emissions(feats, weights_dict)
 
     print(f"Blending emission log-distributions (alpha={ALPHA:.2f})...")
     log_emissions = ALPHA * emits_refined + (1.0 - ALPHA) * emits_bundesliga
+
+    extra_dead = DEAD_BOOST * (1 - in_open) * np.maximum(0.0, (2.0 - ball_speed) / 2.0)
+    log_emissions[:, 2] += extra_dead
+
+    max_e = np.max(log_emissions, axis=1, keepdims=True)
+    e_exp = np.exp(log_emissions - max_e)
+    log_emissions = np.log(np.maximum(1e-12, e_exp / np.sum(e_exp, axis=1, keepdims=True)))
+
     log_A = build_ensemble_transition_matrix()
 
     final_preds = np.full(N_FRAMES, NOBODY, dtype=np.int8)
