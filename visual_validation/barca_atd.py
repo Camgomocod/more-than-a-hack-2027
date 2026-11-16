@@ -21,7 +21,7 @@ LABEL_COLOURS = ("#d62728", "#1f77b4", "#7f7f7f", "#b0b0b0")
 N_FRAMES = GAMES[GAME]["n_video_frames"]
 PITCH_LENGTH, PITCH_WIDTH = GAMES[GAME]["pitch"]
 DEFAULT_TCN = ROOT / "evaluation" / "results" / "model_tcn_clean.csv"
-DEFAULT_CONSENSUS = ROOT / "evaluation" / "results" / "model_consensus.csv"
+DEFAULT_CONSENSUS = ROOT / "los_chuchos.csv"
 
 
 @dataclass

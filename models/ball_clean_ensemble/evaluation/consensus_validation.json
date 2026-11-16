@@ -183,8 +183,8 @@
         "best_frame": 11351
       }
     },
-    "model_consensus": {
-      "path": "evaluation\\results\\model_consensus.csv",
+    "los_chuchos": {
+      "path": "los_chuchos.csv",
       "n_gt": 17,
       "n_pred": 18,
       "spell_f1_mean": 0.6399999999999999,
@@ -281,13 +281,13 @@
       "p95": 0.05810038610038627,
       "fraction_left_better": 0.3336
     },
-    "model_consensus vs model_tcn_clean": {
+    "los_chuchos vs model_tcn_clean": {
       "mean_difference": 0.04512000000000001,
       "p05": 0.0,
       "p95": 0.11428571428571421,
       "fraction_left_better": 0.8786
     },
-    "model_consensus vs model_ensemble": {
+    "los_chuchos vs model_ensemble": {
       "mean_difference": 0.06782529729729726,
       "p05": 0.02779922779922772,
       "p95": 0.13374517374517358,

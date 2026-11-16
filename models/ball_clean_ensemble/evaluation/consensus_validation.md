@@ -1,4 +1,4 @@
-# Validación diagnóstica de `model_consensus`
+# Validación diagnóstica de `los_chuchos.csv` (consensus)
 
 **Advertencia:** esta validación es *in-sample* sobre la ventana pública de 5 minutos / 17 posesiones. No es una estimación del partido completo y no debe usarse para elegir hiperparámetros.
 
@@ -20,7 +20,7 @@ Por tanto, cualquier intervalo calculado aquí sigue siendo optimista: el modelo
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | `model_tcn_clean` | 0.5943 | 0.8312 | 0.3721 | 0.4186 | 18 | 13.95 s | 1.143 | [0.4229, 0.7543] |
 | `model_ensemble` | 0.5730 | 0.8407 | 0.3043 | 0.3913 | 20 | 12.21 s | 1.286 | [0.4216, 0.7135] |
-| `model_consensus` | 0.6400 | 0.8667 | 0.2791 | 0.4186 | 18 | 13.45 s | 1.143 | [0.4800, 0.7886] |
+| `los_chuchos` | 0.6400 | 0.8667 | 0.2791 | 0.4186 | 18 | 13.45 s | 1.143 | [0.4800, 0.7886] |
 
 ## Bootstrap pareado
 
@@ -29,8 +29,8 @@ Mismos resamples de posesiones del GT para todos los modelos. Intervalo percenti
 | comparación | diferencia media | p05 | p95 | fracción A > B |
 |---|---:|---:|---:|---:|
 | model_ensemble vs model_tcn_clean | -0.0227 | -0.1020 | +0.0581 | 0.334 |
-| model_consensus vs model_tcn_clean | +0.0451 | +0.0000 | +0.1143 | 0.879 |
-| model_consensus vs model_ensemble | +0.0678 | +0.0278 | +0.1337 | 1.000 |
+| los_chuchos vs model_tcn_clean | +0.0451 | +0.0000 | +0.1143 | 0.879 |
+| los_chuchos vs model_ensemble | +0.0678 | +0.0278 | +0.1337 | 1.000 |
 
 ## `spellF1` por IoU
 
@@ -38,7 +38,7 @@ Mismos resamples de posesiones del GT para todos los modelos. Intervalo percenti
 |---|---:|---:|---:|---:|---:|
 | `model_tcn_clean` | 0.6857 | 0.6857 | 0.6857 | 0.5143 | 0.4000 |
 | `model_ensemble` | 0.7027 | 0.7027 | 0.6486 | 0.4324 | 0.3784 |
-| `model_consensus` | 0.7429 | 0.7429 | 0.7429 | 0.5143 | 0.4571 |
+| `los_chuchos` | 0.7429 | 0.7429 | 0.7429 | 0.5143 | 0.4571 |
 
 ## Transiciones
 
@@ -48,8 +48,8 @@ Mismos resamples de posesiones del GT para todos los modelos. Intervalo percenti
 | `model_tcn_clean` | 25 | 0.4186 | 0.3913 | 0.4500 | 6.89 | 9 | 11 | 14 |
 | `model_ensemble` | 12 | 0.3043 | 0.2692 | 0.3500 | 4.29 | 7 | 13 | 19 |
 | `model_ensemble` | 25 | 0.3913 | 0.3462 | 0.4500 | 6.67 | 9 | 11 | 17 |
-| `model_consensus` | 12 | 0.2791 | 0.2609 | 0.3000 | 4.17 | 6 | 14 | 17 |
-| `model_consensus` | 25 | 0.4186 | 0.3913 | 0.4500 | 7.56 | 9 | 11 | 14 |
+| `los_chuchos` | 12 | 0.2791 | 0.2609 | 0.3000 | 4.17 | 6 | 14 | 17 |
+| `los_chuchos` | 25 | 0.4186 | 0.3913 | 0.4500 | 7.56 | 9 | 11 | 14 |
 
 ## Sensibilidad a una posesión
 
@@ -59,7 +59,7 @@ Jackknife: se elimina una posesión del GT y se recalcula `spellF1`. Sirve para 
 |---|---:|---:|---:|---|
 | `model_tcn_clean` | 0.5943 | 0.5529 | 0.6118 | #3 (H, 7.75 min) |
 | `model_ensemble` | 0.5730 | 0.5333 | 0.5889 | #3 (H, 7.75 min) |
-| `model_consensus` | 0.6400 | 0.6000 | 0.6588 | #3 (H, 7.75 min) |
+| `los_chuchos` | 0.6400 | 0.6000 | 0.6588 | #3 (H, 7.75 min) |
 
 ## Lectura
 
@@ -69,8 +69,8 @@ Jackknife: se elimina una posesión del GT y se recalcula `spellF1`. Sirve para 
 
 ## Conclusión operativa
 
-`model_consensus` es el mejor candidato en la ventana pública: `spellF1` 0.6400 frente a 0.5943 de `model_tcn_clean`, con una diferencia pareada media de +0.0451 (p05 +0.0000, p95 +0.1143) y 87.9% de resamples a favor.
+`los_chuchos.csv` es el ensemble consensus: `spellF1` 0.6400 frente a 0.5943 de `model_tcn_clean` en la ventana pública, con una diferencia pareada media de +0.0451 (p05 +0.0000, p95 +0.1143) y 87.9% de resamples a favor.
 
-Pero la ventana pública ya se usó para seleccionar y ajustar el modelo (ver auditoría de commits). El propio scoreboard avisa de que las diferencias pequeñas quedan dentro del ruido con 17 posesiones. El jackknife lo confirma: `model_consensus` baja a 0.6000 al quitar una sola posesión, mientras que `model_tcn_clean` llega a 0.6118 en su mejor caso.
+Pero la ventana pública ya se usó para seleccionar y ajustar el modelo (ver auditoría de commits). El propio scoreboard avisa de que las diferencias pequeñas quedan dentro del ruido con 17 posesiones. El jackknife lo confirma: `los_chuchos.csv` baja a 0.6000 al quitar una sola posesión, mientras que `model_tcn_clean` llega a 0.6118 en su mejor caso.
 
-**Recomendación:** no cambiar `los_chuchos.csv` a `model_consensus.csv` solo con esta evidencia. Mantener `model_tcn_clean.csv` como submission final y usar `model_consensus` como candidato experimental hasta tener una validación held-out o de partido completo. Si el equipo decide asumir el riesgo de sobreajuste para el scoreboard público, `model_consensus` es la mejor opción en esta ventana, pero debe etiquetarse como tal.
+**Decisión:** el equipo envía `los_chuchos.csv` (consensus) como submission final. Es la mejor opción en el scoreboard público (0.6400), pero su ventaja no está validada fuera de muestra: en los dos partidos IDSSE no vistos `model_tcn_clean` obtiene un `spellF1` pooled de 0.3415 frente a 0.3252 del consensus. El riesgo de sobreajuste a esta ventana se declara explícitamente en `TECHNICAL_DOCUMENT.md`.

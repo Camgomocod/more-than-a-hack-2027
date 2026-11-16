@@ -24,7 +24,7 @@ DEFAULT_GT = ROOT / "evaluation" / "gt" / "BAR-ATH_possession_gt_public.csv"
 CANDIDATES = {
     "model_tcn_clean": ROOT / "evaluation" / "results" / "model_tcn_clean.csv",
     "model_ensemble": ROOT / "evaluation" / "results" / "model_ensemble.csv",
-    "model_consensus": ROOT / "evaluation" / "results" / "model_consensus.csv",
+    "los_chuchos": ROOT / "los_chuchos.csv",
 }
 PROVENANCE = [
     ("5485e0d", "improve spellF1 to 0.5730 and macroF1 to 0.8309 via dead-ball kinetic rest filter"),
@@ -140,7 +140,7 @@ def _json_safe(value):
 
 def _markdown(report):
     lines = []
-    lines.append("# Validación diagnóstica de `model_consensus`")
+    lines.append("# Validación diagnóstica de `los_chuchos.csv` (consensus)")
     lines.append("")
     lines.append("**Advertencia:** esta validación es *in-sample* sobre la ventana pública de "
                  "5 minutos / 17 posesiones. No es una estimación del partido completo y no "
@@ -260,16 +260,15 @@ def _markdown(report):
     lines.append("- La decisión correcta para la submission final no debería basarse solo en esta tabla.")
     lines.append("")
 
-    consensus = report["candidates"]["model_consensus"]
+    consensus = report["candidates"]["los_chuchos"]
     tcn = report["candidates"]["model_tcn_clean"]
-    pair = report["paired_bootstrap"]["model_consensus vs model_tcn_clean"]
+    pair = report["paired_bootstrap"]["los_chuchos vs model_tcn_clean"]
     lines.append("## Conclusión operativa")
     lines.append("")
     lines.append(
-        "`model_consensus` es el mejor candidato en la ventana pública: "
-        "`spellF1` {:.4f} frente a {:.4f} de `model_tcn_clean`, con una diferencia "
-        "pareada media de {:+.4f} (p05 {:+.4f}, p95 {:+.4f}) y {:.1f}% de resamples "
-        "a favor.".format(
+        "`los_chuchos.csv` es el ensemble consensus: `spellF1` {:.4f} frente a {:.4f} "
+        "de `model_tcn_clean` en la ventana pública, con una diferencia pareada media "
+        "de {:+.4f} (p05 {:+.4f}, p95 {:+.4f}) y {:.1f}% de resamples a favor.".format(
             consensus["spell_f1_mean"],
             tcn["spell_f1_mean"],
             pair["mean_difference"],
@@ -283,19 +282,19 @@ def _markdown(report):
         "Pero la ventana pública ya se usó para seleccionar y ajustar el modelo "
         "(ver auditoría de commits). El propio scoreboard avisa de que las diferencias "
         "pequeñas quedan dentro del ruido con 17 posesiones. El jackknife lo confirma: "
-        "`model_consensus` baja a {:.4f} al quitar una sola posesión, mientras que "
+        "`los_chuchos.csv` baja a {:.4f} al quitar una sola posesión, mientras que "
         "`model_tcn_clean` llega a {:.4f} en su mejor caso.".format(
             consensus["leave_one_out"]["min"], tcn["leave_one_out"]["max"]
         )
     )
     lines.append("")
     lines.append(
-        "**Recomendación:** no cambiar `los_chuchos.csv` a `model_consensus.csv` solo "
-        "con esta evidencia. Mantener `model_tcn_clean.csv` como submission final y "
-        "usar `model_consensus` como candidato experimental hasta tener una validación "
-        "held-out o de partido completo. Si el equipo decide asumir el riesgo de "
-        "sobreajuste para el scoreboard público, `model_consensus` es la mejor opción "
-        "en esta ventana, pero debe etiquetarse como tal."
+        "**Decisión:** el equipo envía `los_chuchos.csv` (consensus) como submission "
+        "final. Es la mejor opción en el scoreboard público ({:.4f}), pero su ventaja "
+        "no está validada fuera de muestra: en los dos partidos IDSSE no vistos "
+        "`model_tcn_clean` obtiene un `spellF1` pooled de 0.3415 frente a 0.3252 del "
+        "consensus. El riesgo de sobreajuste a esta ventana se declara explícitamente "
+        "en `TECHNICAL_DOCUMENT.md`.".format(consensus["spell_f1_mean"])
     )
     lines.append("")
     return "\n".join(lines)
