@@ -9,7 +9,8 @@ def refine_transition_boundaries(
     ball_out,
     ball_speed=None,
     window_dead=35,
-    window_live=15,
+    window_live=25,
+    max_contact_dist=1.5,
 ):
     """Refine temporal transition boundaries using ball kinematics and player proximity.
 
@@ -21,6 +22,7 @@ def refine_transition_boundaries(
         ball_speed (np.ndarray, optional): Instantaneous ball speed in m/s.
         window_dead (int): Maximum backward search window for dead-ball transitions.
         window_live (int): Search window for team possession change transitions.
+        max_contact_dist (float): Maximum player-to-ball distance to establish contact handover.
 
     Returns:
         np.ndarray: State label array with kinematically refined transition boundaries.
@@ -74,15 +76,14 @@ def refine_transition_boundaries(
             w_start = max(0, t_idx - window_live)
             w_end = min(N, t_idx + window_live)
             target_d = d_h if next_lbl == HOME else d_a
-            rival_d = d_a if next_lbl == HOME else d_h
 
-            adv = rival_d[w_start:w_end] - target_d[w_start:w_end]
-            crosses = np.where((adv > 0) & (target_d[w_start:w_end] < 2.5))[0]
-            if len(crosses) > 0:
-                first_cross = w_start + crosses[0]
-                if first_cross < t_idx:
-                    refined[first_cross:t_idx] = next_lbl
-                elif first_cross > t_idx:
-                    refined[t_idx:first_cross] = prev_lbl
+            close_idx = np.where(target_d[w_start:w_end] < max_contact_dist)[0]
+            if len(close_idx) > 0:
+                best_sub = close_idx[np.argmin(target_d[w_start:w_end][close_idx])]
+                contact_f = w_start + best_sub
+                if contact_f < t_idx:
+                    refined[contact_f:t_idx] = next_lbl
+                elif contact_f > t_idx:
+                    refined[t_idx:contact_f] = prev_lbl
 
     return refined
