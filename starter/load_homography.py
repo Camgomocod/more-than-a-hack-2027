@@ -47,7 +47,7 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from games import GAME, DEFAULT_SOURCE, require, source_frames  # noqa: E402
+from games import DEFAULT_SOURCE, GAME, require, source_frames  # noqa: E402
 
 # Params
 MATRIX_COLUMNS = ["h{}{}".format(row, col) for row in range(3) for col in range(3)]

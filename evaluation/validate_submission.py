@@ -25,6 +25,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
 
 import possession_metrics as pm  # noqa: E402  (needs the path above)
+
 from games import GAME, GAMES  # noqa: E402
 
 

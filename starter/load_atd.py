@@ -39,7 +39,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from games import GAME, GAMES, DEFAULT_SOURCE, require, source_frames  # noqa: E402
+from games import DEFAULT_SOURCE, GAME, GAMES, require, source_frames  # noqa: E402
 
 # Params
 # Raw ATD line: "<frame_id>:<player>;<player>;...:<ball>". Only the part before the first
