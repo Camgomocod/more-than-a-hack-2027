@@ -36,7 +36,7 @@ OUTPUT_PATH = os.path.join(ROOT, "los_chuchos.csv")
 DEBOUNCE_MIN_FRAMES = 25
 
 
-WINDOW_LIVE = 20
+WINDOW_LIVE = 25
 
 
 def read_predictions(file_path):
