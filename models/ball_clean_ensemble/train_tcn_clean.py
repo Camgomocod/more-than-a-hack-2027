@@ -2,7 +2,10 @@
 
 The TCN never sees the public ground truth. Its targets are algorithm-produced
 pseudo-labels (the clean HMM ensemble), which is allowed by the competition
-rules. The public GT is only used after training for diagnosis.
+rules.
+
+Writes ``tcn_clean{tag}.pt`` and ``tcn_clean_logits{tag}.npz``. Run it once per
+seed; ``ensemble_tcn_logits.py`` averages the logits afterwards.
 """
 
 import argparse
@@ -22,22 +25,14 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 MODELS_DIR = os.path.join(ROOT, "models")
 sys.path.insert(0, ROOT)
 sys.path.insert(0, MODELS_DIR)
-sys.path.insert(0, os.path.join(ROOT, "evaluation"))
 sys.path.insert(0, HERE)
 
-import possession_metrics as pm  # noqa: E402
 from hmm_viterbi import (  # noqa: E402
-    DEAD,
     HALF_1_END,
     HALF_1_KICKOFF,
     HALF_2_END,
     HALF_2_KICKOFF,
-    HALF_2_START,
-    LABEL_MAP,
-    N_FRAMES,
-    NOBODY,
     compute_emission_log_probabilities,
-    debounce_spells,
 )
 from hmm_viterbi_bundesliga import (  # noqa: E402
     compute_bundesliga_trained_emissions,
@@ -47,8 +42,6 @@ from tcn_model import PossessionTCN  # noqa: E402
 FEATURES = os.path.join(HERE, "features_clean_long_lastseen.npz")
 LABELS = os.path.join(HERE, "results", "clean_ensemble.csv")
 WEIGHTS = os.path.join(MODELS_DIR, "bundesliga_weights.json")
-GT_PATH = os.path.join(
-    ROOT, "evaluation", "gt", "BAR-ATH_possession_gt_public.csv")
 MODEL_PATH = os.path.join(HERE, "tcn_clean.pt")
 LOGITS_PATH = os.path.join(HERE, "tcn_clean_logits.npz")
 
@@ -345,59 +338,6 @@ def predict(model, matrix, logits_path):
     return logits, probabilities
 
 
-def _outside_fill(labels):
-    labels = labels.copy()
-    labels[:HALF_1_KICKOFF] = NOBODY
-    labels[HALF_1_END:HALF_2_KICKOFF] = DEAD
-    labels[HALF_2_END:] = NOBODY
-    return labels
-
-
-def write_submission(labels, path):
-    frame = pd.DataFrame({
-        "frame": np.arange(N_FRAMES, dtype=np.int64),
-        "label": [LABEL_MAP[int(value)] for value in labels],
-    })
-    frame.to_csv(path, index=False)
-    print("Wrote {}".format(path))
-
-
-def write_variants(logits, tag=""):
-    suffix = "_" + tag if tag else ""
-    raw = np.argmax(logits, axis=1).astype(np.int8)
-    raw = _outside_fill(raw)
-    write_submission(
-        raw,
-        os.path.join(
-            HERE, "results", "tcn_clean_raw{}.csv".format(suffix)))
-
-    for min_spell in (25, 50):
-        labels = np.full(N_FRAMES, NOBODY, dtype=np.int8)
-        for start, stop in HALVES:
-            labels[start:stop] = debounce_spells(
-                raw[start:stop].astype(np.int8), min_spell)
-        labels = _outside_fill(labels)
-        write_submission(
-            labels,
-            os.path.join(
-                HERE, "results",
-                "tcn_clean_debounce{}{}.csv".format(min_spell, suffix)))
-
-
-def evaluate(paths):
-    gt = pm.label_codes(pm.read_label_csv(GT_PATH))
-    for path in paths:
-        pred = pm.label_codes(pm.read_label_csv(path))
-        result = pm.evaluate(gt, pred)
-        print("{:32s} spell={:.4f} macro={:.4f} trans25={:.4f} "
-              "poss={:2d}".format(
-                  os.path.basename(path),
-                  result["spell_f1_mean"],
-                  result["macro_f1"],
-                  result["transitions"][25]["f1"],
-                  result["n_pred_spells"]))
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=12)
@@ -415,7 +355,6 @@ def main():
     parser.add_argument("--tag", default="")
     parser.add_argument("--features", default=FEATURES)
     parser.add_argument("--labels", default=LABELS)
-    parser.add_argument("--skip-variants", action="store_true")
     parser.add_argument("--load", action="store_true")
     args = parser.parse_args()
 
@@ -438,18 +377,7 @@ def main():
         model, matrix, _, _ = train(args)
 
     logits, _ = predict(model, matrix, logits_path)
-    if args.skip_variants:
-        return
-
-    suffix = "_" + args.tag if args.tag else ""
-    write_variants(logits, args.tag)
-    evaluate([
-        os.path.join(HERE, "results", "tcn_clean_raw{}.csv".format(suffix)),
-        os.path.join(
-            HERE, "results", "tcn_clean_debounce25{}.csv".format(suffix)),
-        os.path.join(
-            HERE, "results", "tcn_clean_debounce50{}.csv".format(suffix)),
-    ])
+    print("Done. Average the seed logits with ensemble_tcn_logits.py.")
 
 
 if __name__ == "__main__":

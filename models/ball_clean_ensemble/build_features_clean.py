@@ -1,19 +1,15 @@
-"""Build feature bundles that consume the cleaned ball track.
+"""Build the feature bundle that consumes the cleaned ball track.
 
 This module does not modify any of the existing model files. It imports the
 team mapping and Smart Tagging helpers from features/extract_features.py and
 writes only inside models/ball_clean_ensemble/.
 
-The same streaming pass produces three feature bundles:
+It produces a single bundle:
 
     features_clean_long_lastseen.npz   long missing + last_seen reference
-    features_clean_rawmissing.npz      raw missing + last_seen reference
-    features_clean_centroidref.npz     long missing + centroid reference
 
-The difference between last_seen and centroid is only applied while the ball
-is missing: last_seen uses the last observed ball position as the reference,
-while centroid first selects the five players closest to that position, takes
-their centroid, and uses that centroid as the reference for distances.
+While the ball is missing, the reference point for the player distances is the
+last observed ball position.
 """
 
 import argparse
@@ -43,11 +39,15 @@ PITCH_LEN, PITCH_WID = GAMES[GAME]["pitch"]
 HOME = 0
 NO_TEAM = -1
 
-MODES = ("long_lastseen", "rawmissing", "centroidref")
-EXTRA_MODES = ("noclean",)
+MODES = ("long_lastseen",)
 DEFAULT_BALL_CLEAN = os.path.join(
     ROOT, "models", "akima_with_data_prep", "ball_clean.npz")
 DEFAULT_OUT_DIR = HERE
+
+
+def _rel(path):
+    """Repository-relative path with forward slashes, for the JSON sidecar."""
+    return os.path.relpath(path, ROOT).replace(os.sep, "/")
 
 
 def _as_f32(values):
@@ -303,13 +303,11 @@ def build_features(ball_clean_path, raw_path, meta_path, out_dir, modes):
                 arrays["k5a_C"][index] = k5a_c
 
     delta_L = arrays["d_h_L"] - arrays["d_a_L"]
-    delta_C = arrays["d_h_C"] - arrays["d_a_C"]
 
     missing_long = ball["ball_is_missing"].astype(np.uint8)
     missing_raw = (ball["ball_observed"].astype(np.uint8) == 0).astype(np.uint8)
     gap_age = ball["ball_gap_age"].astype(np.int32)
     streak_long = np.where(missing_long == 1, gap_age, 0)
-    streak_raw = gap_age
 
     shared = {
         "video_frame": np.arange(n, dtype=np.int64),
@@ -350,30 +348,6 @@ def build_features(ball_clean_path, raw_path, meta_path, out_dir, modes):
             delta = delta_L
             missing = missing_long
             streak = streak_long
-        elif mode == "rawmissing":
-            d_h = arrays["d_h_L"]
-            d_a = arrays["d_a_L"]
-            k5h = arrays["k5h_L"]
-            k5a = arrays["k5a_L"]
-            delta = delta_L
-            missing = missing_raw
-            streak = streak_raw
-        elif mode == "centroidref":
-            d_h = arrays["d_h_C"]
-            d_a = arrays["d_a_C"]
-            k5h = arrays["k5h_C"]
-            k5a = arrays["k5a_C"]
-            delta = delta_C
-            missing = missing_long
-            streak = streak_long
-        elif mode == "noclean":
-            d_h = arrays["d_h_L"]
-            d_a = arrays["d_a_L"]
-            k5h = arrays["k5h_L"]
-            k5a = arrays["k5a_L"]
-            delta = delta_L
-            missing = missing_raw
-            streak = streak_raw
         else:
             raise ValueError("modo desconocido: {}".format(mode))
 
@@ -397,12 +371,12 @@ def build_features(ball_clean_path, raw_path, meta_path, out_dir, modes):
         print("  [OK] {} ({:.2f} MB)".format(out_path, size_mb))
 
     meta = {
-        "ball_clean_path": os.path.abspath(ball_clean_path),
-        "raw_atd_path": os.path.abspath(raw_path),
-        "atd_meta_path": os.path.abspath(meta_path),
+        "ball_clean_path": _rel(ball_clean_path),
+        "raw_atd_path": _rel(raw_path),
+        "atd_meta_path": _rel(meta_path),
         "n_frames": n,
         "modes": {
-            mode: os.path.abspath(path) for mode, path in mode_paths.items()
+            mode: _rel(path) for mode, path in mode_paths.items()
         },
         "counts": {
             "observed": int(ball["ball_observed"].sum()),
@@ -412,8 +386,6 @@ def build_features(ball_clean_path, raw_path, meta_path, out_dir, modes):
         },
         "reference_modes": {
             "long_lastseen": "last_seen",
-            "rawmissing": "last_seen",
-            "centroidref": "centroid_of_5nn_around_last_seen",
         },
         "built_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "runtime_seconds": round(time.time() - started, 3),
@@ -435,8 +407,7 @@ def main():
     parser.add_argument("--meta-path", default=None)
     parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
     parser.add_argument(
-        "--mode", action="append", choices=MODES + EXTRA_MODES, default=None)
-    parser.add_argument("--all", action="store_true")
+        "--mode", action="append", choices=MODES, default=None)
     args = parser.parse_args()
 
     paths = require(["atd_raw", "atd_meta"])
@@ -444,8 +415,6 @@ def main():
     meta_path = args.meta_path or paths[1]
 
     modes = tuple(args.mode) if args.mode else MODES
-    if args.all:
-        modes = MODES
 
     os.makedirs(args.out_dir, exist_ok=True)
     build_features(

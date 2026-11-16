@@ -31,7 +31,7 @@ from hmm_viterbi import (
 
 TCN_RESULTS_PATH = os.path.join(ROOT, "evaluation", "results", "model_tcn_clean.csv")
 ENSEMBLE_RESULTS_PATH = os.path.join(ROOT, "evaluation", "results", "model_ensemble.csv")
-OUTPUT_PATH = os.path.join(ROOT, "evaluation", "results", "model_consensus.csv")
+OUTPUT_PATH = os.path.join(ROOT, "los_chuchos.csv")
 
 DEBOUNCE_MIN_FRAMES = 25
 
